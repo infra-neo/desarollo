@@ -1,7 +1,7 @@
 import axios from "axios";
 
 // URL base para todas las solicitudes a la API de TSPlus
-const BASE_URL = "http://127.0.0.1:8020/tsplus";
+const BASE_URL = "http://localhost:8020/tsplus";
 
 // Clase para manejar todas las solicitudes a la API de TSPlus
 class TSPlusAPI {
