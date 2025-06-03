@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Play } from "lucide-react";
 import AVAILABLE_COMMANDS from "@/utils/tsplusCommands";
 import type { CommandMethod } from "@/types/command.types";
+import SelectWithTooltip from "../common/SelectWithTooltip";
 
 interface Props {
   server: any;
@@ -29,8 +30,8 @@ const ActionPanel = ({ server, onClose }: Props) => {
     (command) => command.id === selectedCommand
   );
 
-  const handleCommandChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelectedCommand(e.target.value);
+  const handleCommandChange = (value: string) => {
+    setSelectedCommand(value);
     setParamsValues({});
     setError(null);
   };
@@ -92,20 +93,17 @@ const ActionPanel = ({ server, onClose }: Props) => {
           <div className="space-y-2">
             {/* // * Available commands */}
 
-            <Label htmlFor="command-select">Selecciona un comando</Label>
-            <select
+            <SelectWithTooltip
               id="command-select"
+              label="Selecciona un comando"
+              options={AVAILABLE_COMMANDS.map((command) => ({
+                id: command.id,
+                label: command.name,
+                description: command.params.length > 0 ? "Con parámetros" : "",
+              }))}
               value={selectedCommand}
               onChange={handleCommandChange}
-              className="px-3 py-2 w-full rounded-md border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="">Seleccionar comando...</option>
-              {AVAILABLE_COMMANDS.map((command) => (
-                <option key={command.id} value={command.id}>
-                  {command.name}
-                </option>
-              ))}
-            </select>
+            />
           </div>
 
           {commandDefinition && commandDefinition.params.length > 0 && (
