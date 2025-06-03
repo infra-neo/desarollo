@@ -14,6 +14,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
 
 export interface SelectOption {
   id: string;
@@ -29,6 +30,7 @@ interface Props {
   onChange: (value: string) => void;
   placeholder?: string;
   className?: string;
+  contentClassName?: string;
 }
 
 const SelectWithTooltip = ({
@@ -38,7 +40,8 @@ const SelectWithTooltip = ({
   value,
   onChange,
   placeholder = "Seleccionar...",
-  className = "",
+  className = "w-full",
+  contentClassName = "max-h-[200px]",
 }: Props) => {
   const [open, setOpen] = useState(false);
 
@@ -54,7 +57,7 @@ const SelectWithTooltip = ({
         <SelectTrigger id={id} className={className}>
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent className={cn("overflow-y-auto", contentClassName)}>
           <SelectGroup>
             {options.map((option) => (
               <TooltipProvider key={option.id}>
@@ -63,7 +66,7 @@ const SelectWithTooltip = ({
                     <SelectItem value={option.id}>{option.label}</SelectItem>
                   </TooltipTrigger>
                   {option.description && (
-                    <TooltipContent side="right">
+                    <TooltipContent side="bottom">
                       <p>{option.description}</p>
                     </TooltipContent>
                   )}

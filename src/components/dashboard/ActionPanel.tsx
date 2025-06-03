@@ -99,10 +99,11 @@ const ActionPanel = ({ server, onClose }: Props) => {
               options={AVAILABLE_COMMANDS.map((command) => ({
                 id: command.id,
                 label: command.name,
-                description: command.params.length > 0 ? "Con parámetros" : "",
+                description: command.description,
               }))}
               value={selectedCommand}
               onChange={handleCommandChange}
+              contentClassName="max-h-[450px]"
             />
           </div>
 

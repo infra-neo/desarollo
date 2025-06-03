@@ -130,9 +130,9 @@ body {
     @apply bg-gradient-to-br from-blue-800/70 to-blue-500/70 via-indigo-400/10;
   }
 
-  .bg-app-gradient {
+  /* .bg-app-gradient {
     @apply bg-gradient-to-br from-blue-400 to-purple-400 via-indigo-400/10;
-  }
+  } */
 
   .card-gradient {
     @apply bg-gradient-to-r from-blue-800 to-blue-400;
