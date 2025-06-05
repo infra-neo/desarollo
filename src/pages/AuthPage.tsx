@@ -8,7 +8,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Server } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   containerVariants,
@@ -17,7 +16,7 @@ import {
   buttonVariants,
 } from "@/utils/animations";
 import useAuthForm from "@/hooks/auth/useAuthForm";
-import Logo from "@/assets/logo/Logo_Neo.webp";
+import Logo from "@/assets/logo/Logo_cuadrado.png";
 
 const AuthPage = () => {
   const { register, handleSubmit, errors, onSubmit, isLogin, toogleLogin } =
@@ -40,7 +39,7 @@ const AuthPage = () => {
         <Card className="w-full border-0 shadow-2xl backdrop-blur-sm bg-white/80">
           <CardHeader className="pb-2 text-center">
             <motion.div
-              className="flex relative top-3 justify-center items-center px-2 mx-auto mb-4 w-72 h-auto rounded-xl"
+              className="flex relative top-2 justify-center items-center px-2 mx-auto mb-4 w-72 h-auto rounded-xl"
               initial={{ scale: 0, rotate: -180 }}
               animate={{ scale: 1, rotate: 0 }}
               transition={{

@@ -1,16 +1,8 @@
 import { useNavigate, useLocation } from "react-router";
 import { Button } from "../ui/button";
-import {
-  Activity,
-  Home,
-  LogOut,
-  Server,
-  Settings,
-  Users,
-  X,
-} from "lucide-react";
+import { Home, LogOut, Server, X } from "lucide-react";
 import useAuth from "@/hooks/auth/useAuth";
-import Logo from "@/assets/logo/Logo_Neo.webp";
+import Logo from "@/assets/logo/Logo_horizontal.png";
 
 interface Props {
   isMobileOpen: boolean;
@@ -61,7 +53,7 @@ const Sidebar = ({ isMobileOpen, setIsMobileOpen }: Props) => {
           {/* Header del sidebar */}
           <div className="flex items-center p-4 border-b border-gray-300">
             <div className="flex justify-center items-center">
-              <div className="flex justify-center items-center h-20 rounded-lg">
+              <div className="flex justify-center items-center h-16 rounded-lg">
                 <img src={Logo} alt="" className="w-full h-full" />
               </div>
             </div>
