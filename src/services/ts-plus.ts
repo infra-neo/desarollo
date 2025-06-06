@@ -52,10 +52,10 @@ class TSPlusAPI {
   }
 
   // Método para actualizar licencias de volumen
-  static async updateVolume(license: string, users: number) {
+  static async updateVolume(license: string, users: string) {
     try {
       const response = await axios.put(
-        `${BASE_URL}/volume_en_dis/?license=${license}&users=${users}`
+        `${BASE_URL}/update_volume/?license=${license}&users=${users}`
       );
       return response.data;
     } catch (error) {
@@ -122,12 +122,11 @@ class TSPlusAPI {
   }
 
   // Método para gestionar créditos de licencia
-  static async licenseCredits(license: string, users: number, edition: string) {
+  static async licenseCredits(license: string, edition: string) {
     try {
       const response = await axios.put(
         `${BASE_URL}/license_credits/?license=${license}`,
         {
-          users,
           edition,
           silent: false,
         }
@@ -141,12 +140,11 @@ class TSPlusAPI {
   }
 
   // Método para gestionar créditos de soporte
-  static async supportCredits(license: string, users: number, edition: string) {
+  static async supportCredits(license: string, edition: string) {
     try {
       const response = await axios.put(
         `${BASE_URL}/support_credits/?license=${license}`,
         {
-          users,
           edition,
           silent: false,
         }
@@ -173,7 +171,7 @@ class TSPlusAPI {
   static async activate(licensePath: string) {
     try {
       const response = await axios.post(
-        `${BASE_URL}/volume_en_dis/?licensePath=${licensePath}`
+        `${BASE_URL}/activate/?licensePath=${licensePath}`
       );
       return response.data;
     } catch (error) {
@@ -298,10 +296,9 @@ class TSPlusAPI {
   }
 
   // Método para hacer backup de datos
-  static async backupData(users: string[]) {
+  static async backupData() {
     try {
       const response = await axios.post(`${BASE_URL}/backup_data/`, {
-        users,
         silent: true,
       });
       return response.data;
@@ -311,10 +308,9 @@ class TSPlusAPI {
   }
 
   // Método para restaurar datos
-  static async restoreData(users: string[]) {
+  static async restoreData() {
     try {
       const response = await axios.put(`${BASE_URL}/restore_data/`, {
-        users,
         silent: true,
       });
       return response.data;
@@ -344,11 +340,9 @@ class TSPlusAPI {
   }
 
   // Método para instalar impresora
-  static async installPrinter(printerName: string) {
+  static async installPrinter() {
     try {
-      const response = await axios.post(`${BASE_URL}/install_printer/`, {
-        printerName,
-      });
+      const response = await axios.post(`${BASE_URL}/install_printer/`);
       return response.data;
     } catch (error) {
       throw new Error(`Error al instalar impresora: ${error.message}`);
@@ -356,11 +350,9 @@ class TSPlusAPI {
   }
 
   // Método para eliminar impresora
-  static async removePrinter(printerName: string) {
+  static async removePrinter() {
     try {
-      const response = await axios.delete(`${BASE_URL}/remove_printer/`, {
-        printerName,
-      });
+      const response = await axios.delete(`${BASE_URL}/remove_printer/`);
       return response.data;
     } catch (error) {
       throw new Error(`Error al eliminar impresora: ${error.message}`);
