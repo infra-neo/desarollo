@@ -3,6 +3,10 @@ import axios from "axios";
 // URL base para todas las solicitudes a la API de TSPlus
 const BASE_URL = "http://localhost:8020/tsplus";
 
+// Variables de configuración para pruebas - Modifica estas constantes para tus pruebas
+const DEFAULT_LICENSE = import.meta.env.VITE_LICENCE;
+const DEFAULT_LICENSE_PATH = import.meta.env.VITE_LICENSE_PATH;
+
 // Clase para manejar todas las solicitudes a la API de TSPlus
 class TSPlusAPI {
   // Método para obtener información del servidor
@@ -18,7 +22,10 @@ class TSPlusAPI {
   }
 
   // Método para habilitar/deshabilitar licencias de volumen
-  static async volumeEnableDisable(license: string, option: string) {
+  static async volumeEnableDisable(
+    license: string = DEFAULT_LICENSE,
+    option: string
+  ) {
     try {
       const response = await axios.put(
         `${BASE_URL}/volume_en_dis/?license=${license}&option=${option}`
@@ -31,7 +38,7 @@ class TSPlusAPI {
 
   // Método para activar licencias de volumen
   static async volumeActivate(
-    license: string,
+    license: string = DEFAULT_LICENSE,
     users: number,
     edition: string,
     supportYears: number
@@ -52,7 +59,7 @@ class TSPlusAPI {
   }
 
   // Método para actualizar licencias de volumen
-  static async updateVolume(license: string, users: string) {
+  static async updateVolume(license: string = DEFAULT_LICENSE, users: string) {
     try {
       const response = await axios.put(
         `${BASE_URL}/update_volume/?license=${license}&users=${users}`
@@ -122,7 +129,10 @@ class TSPlusAPI {
   }
 
   // Método para gestionar créditos de licencia
-  static async licenseCredits(license: string, edition: string) {
+  static async licenseCredits(
+    license: string = DEFAULT_LICENSE,
+    edition: string
+  ) {
     try {
       const response = await axios.put(
         `${BASE_URL}/license_credits/?license=${license}`,
@@ -140,7 +150,10 @@ class TSPlusAPI {
   }
 
   // Método para gestionar créditos de soporte
-  static async supportCredits(license: string, edition: string) {
+  static async supportCredits(
+    license: string = DEFAULT_LICENSE,
+    edition: string
+  ) {
     try {
       const response = await axios.put(
         `${BASE_URL}/support_credits/?license=${license}`,
@@ -168,7 +181,7 @@ class TSPlusAPI {
   }
 
   // Método para activar
-  static async activate(licensePath: string) {
+  static async activate(licensePath: string = DEFAULT_LICENSE_PATH) {
     try {
       const response = await axios.post(
         `${BASE_URL}/activate/?licensePath=${licensePath}`
