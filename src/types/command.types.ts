@@ -8,6 +8,7 @@ export interface CommandDefinition {
     id: string;
     name: string;
     type: string;
+    selectOptions?: Array<{ id: string; value: string }>;
   }>;
   method: CommandMethod;
 }

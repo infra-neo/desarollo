@@ -12,8 +12,16 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Play } from "lucide-react";
 import AVAILABLE_COMMANDS from "@/utils/tsplusCommands";
-import type { CommandMethod } from "@/types/command.types";
+import type { CommandDefinition, CommandMethod } from "@/types/command.types";
 import SelectWithTooltip from "../common/SelectWithTooltip";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import CommandParamsForm from "./CommandParamsForm";
 
 interface Props {
   server: any;
@@ -107,28 +115,11 @@ const ActionPanel = ({ server, onClose }: Props) => {
             />
           </div>
 
-          {commandDefinition && commandDefinition.params.length > 0 && (
-            <>
-              {/* // * We could use this later */}
-              {/* <h3>{commandDefinition.name}</h3> */}
-              {commandDefinition.params.map((param) => (
-                <div className="space-y-2" key={param.id}>
-                  <Label htmlFor={`param-${param.id}`}>{param.name}</Label>
-                  <Input
-                    id={`param-${param.id}`}
-                    type={param.type}
-                    value={paramsValues[param.id] || ""}
-                    onChange={(e) =>
-                      handleParamChange(param.id, e.target.value)
-                    }
-                    required
-                    placeholder="Ingresa parámetros..."
-                    className="focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-              ))}
-            </>
-          )}
+          <CommandParamsForm
+            commandDefinition={commandDefinition as CommandDefinition}
+            paramsValues={paramsValues}
+            handleParamChange={handleParamChange}
+          />
         </div>
 
         <form onSubmit={executedCommand} className="flex pt-4 space-x-3">

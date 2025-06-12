@@ -2,6 +2,7 @@ import TSPlusAPI from "@/services/ts-plus";
 import type { CommandDefinition } from "@/types/command.types";
 
 const AVAILABLE_COMMANDS: CommandDefinition[] = [
+  // === 2FA ===
   {
     id: "2FA_Add_Groups",
     name: "2FA - Añadir Grupo",
@@ -36,6 +37,8 @@ const AVAILABLE_COMMANDS: CommandDefinition[] = [
     params: [{ id: "user", name: "Usuario", type: "text" }],
     method: TSPlusAPI.reset2FA,
   },
+
+  // === Licencias ===
   {
     id: "activate",
     name: "Activación de licencia",
@@ -45,16 +48,67 @@ const AVAILABLE_COMMANDS: CommandDefinition[] = [
     method: TSPlusAPI.activate,
   },
   {
+    id: "install_volume_license_server",
+    name: "Instalar Servidor de Licencias por Volumen",
+    description:
+      "Comando para instalar un servidor de licencias por volumen en un solo paso.",
+    params: [
+      { id: "licenseKey", name: "Clave de Licencia", type: "text" },
+      { id: "users", name: "Número de Usuarios", type: "number" },
+      {
+        id: "edition",
+        name: "Edición",
+        type: "select",
+        selectOptions: [
+          { id: "Enterprise", value: "Enterprise" },
+          { id: "Standard", value: "Standard" },
+          { id: "Advanced", value: "Advanced" },
+        ],
+      },
+      { id: "supportYears", name: "Años de Soporte", type: "number" },
+    ],
+    // * We will need the next paramaters later (We just need above for testing)
+    // {
+    //   id: "activatesecurityaddon",
+    //   name: "Paquete de Seguridad",
+    //   type: "select",
+    //   selectOptions: [
+    //     { id: "Basic", value: "Basic" },
+    //     { id: "Standard", value: "Standard" },
+    //     { id: "Advanced", value: "Advanced" },
+    //     { id: "Ultimate", value: "Ultimate" },
+    //   ],
+    // },
+    // {
+    //   id: "comments",
+    //   name: "Comentarios",
+    //   type: "text",
+    // },
+    method: TSPlusAPI.installVolumeLicenseServer,
+  },
+  {
     id: "volume_act",
     name: "Activar Licencia de Volumen",
     description: "Comando para activar una licencia por volumen.",
     params: [
       { id: "license", name: "Licencia", type: "text" },
       { id: "users", name: "Usuarios", type: "number" },
-      { id: "edition", name: "Edición", type: "text" },
+      {
+        id: "edition",
+        name: "Edición",
+        type: "select",
+        selectOptions: [{ id: "Enterprise", value: "Enterprise" }],
+      },
       { id: "supportYears", name: "Años de Soporte", type: "number" },
     ],
     method: TSPlusAPI.volumeActivate,
+  },
+  {
+    id: "volume_en_dis",
+    name: "Deshabilitar Licencia de Volumen",
+    description: "Comando para deshabilitar una licencia por volumen.",
+    params: [{ id: "license", name: "Licencia", type: "text" }],
+    method: TSPlusAPI.volumeDisable,
   },
   {
     id: "update_volume",
@@ -68,37 +122,14 @@ const AVAILABLE_COMMANDS: CommandDefinition[] = [
     method: TSPlusAPI.updateVolume,
   },
   {
-    id: "update",
-    name: "Actualizar TSplus",
-    description:
-      "Comando para actualizar TSplus Remote Access y Advanced Security.",
-    params: [],
-    method: TSPlusAPI.update,
-  },
-  {
-    id: "audit",
-    name: "Correr una Auditoria de sistema",
-    description: "Comando para ejecutar una auditoría del sistema.",
-    params: [],
-    method: TSPlusAPI.audit,
-  },
-  {
-    id: "backup_data",
-    name: "Backup",
-    description:
-      "Comando para hacer una copia de seguridad de los datos y configuraciones de TSplus.",
-    params: [{ id: "users", name: "Usuarios", type: "text" }],
-    method: TSPlusAPI.backupData,
-  },
-  {
     id: "license_credits",
     name: "Desplegar creditos de licencia disponible para la llave de licencia",
     description:
       "Comando para mostrar los créditos de licencia restantes asociados con una clave de licencia por volumen.",
     params: [
       { id: "license", name: "Licencia", type: "text" },
-      { id: "users", name: "Usuarios", type: "number" },
       { id: "edition", name: "Edición", type: "text" },
+      { id: "login", name: "Usuario", type: "text" },
     ],
     method: TSPlusAPI.licenseCredits,
   },
@@ -109,11 +140,21 @@ const AVAILABLE_COMMANDS: CommandDefinition[] = [
       "Comando para mostrar los créditos de soporte restantes asociados con una clave de licencia por volumen.",
     params: [
       { id: "license", name: "Licencia", type: "text" },
-      { id: "users", name: "Usuarios", type: "number" },
       { id: "edition", name: "Edición", type: "text" },
+      { id: "login", name: "Usuario", type: "text" },
     ],
     method: TSPlusAPI.supportCredits,
   },
+  {
+    id: "reset_license",
+    name: "Resetear Licencia de la siguiente Maquina Virtual Clonada",
+    description:
+      "Comando para inicializar las licencias en un servidor clonado.",
+    params: [],
+    method: TSPlusAPI.resetLicense,
+  },
+
+  // === Web Credentials ===
   {
     id: "web_credentials",
     name: "Abrir Formulario Credenciales Web",
@@ -145,17 +186,50 @@ const AVAILABLE_COMMANDS: CommandDefinition[] = [
     params: [{ id: "webLogin", name: "Login Web", type: "text" }],
     method: TSPlusAPI.removeWebCredentials,
   },
+
+  // === Backup / Restore ===
   {
-    id: "volume_en_dis",
-    name: "Habilitar o Deshabilitar Licencia de Volumen",
+    id: "backup_data",
+    name: "Backup",
     description:
-      "Comando para habilitar o deshabilitar una licencia por volumen.",
-    params: [
-      { id: "license", name: "Licencia", type: "text" },
-      { id: "option", name: "Opción", type: "text" },
-    ],
-    method: TSPlusAPI.volumeEnableDisable,
+      "Comando para hacer una copia de seguridad de los datos y configuraciones de TSplus.",
+    params: [{ id: "users", name: "Usuarios", type: "text" }],
+    method: TSPlusAPI.backupData,
   },
+  {
+    id: "restore_data",
+    name: "Restaurar",
+    description: "Comando para restaurar datos y configuraciones de TSplus.",
+    params: [{ id: "users", name: "Usuarios", type: "text" }],
+    method: TSPlusAPI.restoreData,
+  },
+
+  // === Sistema / Utilidades ===
+  {
+    id: "audit",
+    name: "Correr una Auditoria de sistema",
+    description: "Comando para ejecutar una auditoría del sistema.",
+    params: [],
+    method: TSPlusAPI.audit,
+  },
+  {
+    id: "update",
+    name: "Actualizar TSplus",
+    description:
+      "Comando para actualizar TSplus Remote Access y Advanced Security.",
+    params: [],
+    method: TSPlusAPI.update,
+  },
+  {
+    id: "windows_compatibility",
+    name: "Aplicar Compatibilidad de Windows",
+    description:
+      "Comando para aplicar actualizaciones de compatibilidad de Windows.",
+    params: [],
+    method: TSPlusAPI.windowsCompatibility,
+  },
+
+  // === Impresoras ===
   {
     id: "install_printer",
     name: "Instalar Impresora Universal",
@@ -163,6 +237,15 @@ const AVAILABLE_COMMANDS: CommandDefinition[] = [
     params: [],
     method: TSPlusAPI.installPrinter,
   },
+  {
+    id: "remove_printer",
+    name: "Remover Impresora Universal",
+    description: "Comando para desinstalar la Impresora Universal.",
+    params: [],
+    method: TSPlusAPI.removePrinter,
+  },
+
+  // === Administración de sesiones y granjas ===
   {
     id: "load_balancing",
     name: "Abrir Administrador de Balanceo de Carga",
@@ -186,6 +269,8 @@ const AVAILABLE_COMMANDS: CommandDefinition[] = [
     params: [],
     method: TSPlusAPI.sessionManager,
   },
+
+  // === Red / Proxy / Web Server ===
   {
     id: "proxy",
     name: "Configurar Proxy",
@@ -200,42 +285,12 @@ const AVAILABLE_COMMANDS: CommandDefinition[] = [
     method: TSPlusAPI.configureProxy,
   },
   {
-    id: "remove_printer",
-    name: "Remover Impresora Universal",
-    description: "Comando para desinstalar la Impresora Universal.",
-    params: [],
-    method: TSPlusAPI.removePrinter,
-  },
-  {
-    id: "reset_license",
-    name: "Resetear Licencia de la siguiente Maquina Virtual Clonada",
-    description:
-      "Comando para inicializar las licencias en un servidor clonado.",
-    params: [],
-    method: TSPlusAPI.resetLicense,
-  },
-  {
-    id: "restore_data",
-    name: "Restaurar",
-    description: "Comando para restaurar datos y configuraciones de TSplus.",
-    params: [{ id: "users", name: "Usuarios", type: "text" }],
-    method: TSPlusAPI.restoreData,
-  },
-  {
     id: "webserver",
     name: "Servidor Web",
     description:
       "Comandos para controlar el servidor web (detener, iniciar, reiniciar).",
     params: [{ id: "option", name: "Opción", type: "text" }],
     method: TSPlusAPI.configureWebServer,
-  },
-  {
-    id: "windows_compatibility",
-    name: "Aplicar Compatibilidad de Windows",
-    description:
-      "Comando para aplicar actualizaciones de compatibilidad de Windows.",
-    params: [],
-    method: TSPlusAPI.windowsCompatibility,
   },
 ];
 
