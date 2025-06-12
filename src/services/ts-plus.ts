@@ -21,10 +21,37 @@ class TSPlusAPI {
     }
   }
 
+  static async installVolumeLicenseServer(
+    licenseKey: string,
+    users: string,
+    edition: string,
+    supportYears: number,
+    activatesecurityaddon?: string,
+    comments?: string
+  ) {
+    try {
+      const response = await axios.post(
+        `${BASE_URL}/install_tsplus/?license=${licenseKey}`,
+        {
+          users,
+          edition,
+          supportyears: supportYears,
+          activatesecurityaddon,
+          comments,
+        }
+      );
+      return response.data;
+    } catch (error) {
+      throw new Error(
+        `Error al instalar servidor de licencias por volumen: ${error.message}`
+      );
+    }
+  }
+
   // Método para habilitar/deshabilitar licencias de volumen
-  static async volumeEnableDisable(
+  static async volumeDisable(
     license: string = DEFAULT_LICENSE,
-    option: string
+    option = "disable"
   ) {
     try {
       const response = await axios.put(
@@ -41,7 +68,9 @@ class TSPlusAPI {
     license: string = DEFAULT_LICENSE,
     users: number,
     edition: string,
-    supportYears: number
+    supportYears: number,
+    comments?: string, // Agregado: opcional, puede ser undefined
+    silent: boolean = false // Agregado: por defecto en false para feedback visual
   ) {
     try {
       const response = await axios.post(
@@ -50,6 +79,8 @@ class TSPlusAPI {
           users,
           edition,
           supportyears: supportYears,
+          comments, // Enviamos 'comments'
+          silent, // Enviamos 'silent'
         }
       );
       return response.data;
@@ -131,12 +162,14 @@ class TSPlusAPI {
   // Método para gestionar créditos de licencia
   static async licenseCredits(
     license: string = DEFAULT_LICENSE,
-    edition: string
+    edition: string,
+    login: string
   ) {
     try {
       const response = await axios.put(
         `${BASE_URL}/license_credits/?license=${license}`,
         {
+          login,
           edition,
           silent: false,
         }
@@ -152,12 +185,14 @@ class TSPlusAPI {
   // Método para gestionar créditos de soporte
   static async supportCredits(
     license: string = DEFAULT_LICENSE,
-    edition: string
+    edition: string,
+    login: string
   ) {
     try {
       const response = await axios.put(
         `${BASE_URL}/support_credits/?license=${license}`,
         {
+          login,
           edition,
           silent: false,
         }
@@ -248,7 +283,7 @@ class TSPlusAPI {
     webPassword: string,
     windowsLogin: string,
     windowsPassword: string,
-    maximumCurrentSessions: number
+    maximumCurrentSessions?: number // Corregido: ahora es opcional
   ) {
     try {
       const response = await axios.post(`${BASE_URL}/web_credentials_add/`, {
@@ -256,7 +291,7 @@ class TSPlusAPI {
         webPassword,
         windowsLogin,
         windowsPassword,
-        maximumCurrentSessions,
+        maximumCurrentSessions, // Se enviará 'undefined' si no se proporciona
       });
       return response.data;
     } catch (error) {
@@ -279,9 +314,9 @@ class TSPlusAPI {
   // Método para configurar proxy
   static async configureProxy(
     host: string,
-    port: number,
-    username: string,
-    password: string
+    port?: number,
+    username?: string,
+    password?: string
   ) {
     try {
       const response = await axios.post(`${BASE_URL}/proxy/`, {
@@ -309,10 +344,11 @@ class TSPlusAPI {
   }
 
   // Método para hacer backup de datos
-  static async backupData() {
+  static async backupData(optionalPath?: string, silent: boolean = false) {
     try {
       const response = await axios.post(`${BASE_URL}/backup_data/`, {
-        silent: true,
+        optionalPath, // Enviamos la ruta opcional
+        silent, // Controlamos el modo silencioso
       });
       return response.data;
     } catch (error) {
@@ -321,10 +357,11 @@ class TSPlusAPI {
   }
 
   // Método para restaurar datos
-  static async restoreData() {
+  static async restoreData(backupPath: string, silent: boolean = false) {
     try {
       const response = await axios.put(`${BASE_URL}/restore_data/`, {
-        silent: true,
+        backupPath,
+        silent,
       });
       return response.data;
     } catch (error) {
