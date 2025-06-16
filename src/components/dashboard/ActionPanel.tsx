@@ -89,7 +89,9 @@ const ActionPanel = ({ server, onClose }: Props) => {
           setOpenModal(false);
           executedCommand();
         }}
-        onCancel={() => setOpenModal(false)}
+        onCancel={() => {
+          setOpenModal(false);
+        }}
       />
       <Card className="mt-6">
         <CardHeader className="pb-4">
@@ -134,7 +136,10 @@ const ActionPanel = ({ server, onClose }: Props) => {
           </div>
 
           <form
-            onSubmit={() => setOpenModal(true)}
+            onSubmit={(e) => {
+              e.preventDefault();
+              setOpenModal(true);
+            }}
             className="flex pt-4 space-x-3"
           >
             <Button
