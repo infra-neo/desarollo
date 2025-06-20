@@ -1,3 +1,5 @@
+import { ADMIN_EMAIL, ADMIN_PASSWORD } from "@/constants/adminCredential";
+import useLocalStorage from "@/hooks/useLocalStorage";
 import React, { createContext, useState } from "react";
 
 type User = {
@@ -9,30 +11,45 @@ type User = {
 type AuthContextType = {
   user: User;
   isAuthenticated: boolean;
-  login: (userData: User) => void;
+  login: (userData: User, password: string) => boolean;
   logout: () => void;
 };
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
   isAuthenticated: false,
-  login: () => {},
+  login: () => false,
   logout: () => {},
 });
 
 const MOCK_USER = {
   id: 1,
-  email: "diego@web.com",
-  name: "Diego",
+  email: ADMIN_EMAIL,
+  name: "admin",
 };
 
 const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [user, setUser] = useState<User>(MOCK_USER);
-  const [isAuthenticated, setIsAuthenticated] = useState(true);
+  const [user, setUser] = useLocalStorage<User>("user", MOCK_USER);
+  const [isAuthenticated, setIsAuthenticated] = useLocalStorage<boolean>(
+    "isAuthenticated",
+    false
+  );
 
-  const login = (userData: User) => {
-    setUser(userData);
-    setIsAuthenticated(true);
+  const authorizeLoginAdmin = (email?: string, password?: string) => {
+    if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
+      return true;
+    }
+
+    return false;
+  };
+
+  const login = (userData: User, password: string) => {
+    if (authorizeLoginAdmin(userData?.email, password)) {
+      setUser(userData);
+      setIsAuthenticated(true);
+      return true;
+    }
+    return false;
   };
 
   const logout = () => {
@@ -41,7 +58,14 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated, login, logout }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        isAuthenticated,
+        login,
+        logout,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

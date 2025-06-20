@@ -7,13 +7,23 @@ import ServersPage from "./pages/ServersPage";
 import MonitoringPage from "./pages/MonitoringPage";
 import UsersPage from "./pages/UsersPage";
 import SettingsPage from "./pages/SettingsPage";
+import { Toaster } from "sonner";
+import RedirectToDashboard from "./components/common/RedirectRoute";
 
 function App() {
   return (
     <AuthProvider>
+      <Toaster richColors position="top-center" />
       <Router>
         <Routes>
-          <Route path="/auth" element={<AuthPage />} />
+          <Route
+            path="/auth"
+            element={
+              <RedirectToDashboard>
+                <AuthPage />
+              </RedirectToDashboard>
+            }
+          />
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route
             path="/dashboard"
