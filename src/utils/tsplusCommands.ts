@@ -1,5 +1,11 @@
 import TSPlusAPI from "@/services/ts-plus";
 import type { CommandDefinition } from "@/types/command.types";
+import {
+  volumeActivationSchema,
+  volumeDisableSchema,
+  volumeInstallSchema,
+  volumeUpdateSchema,
+} from "@/schemas/ts-plusCommandsSchema";
 
 const AVAILABLE_COMMANDS: CommandDefinition[] = [
   // === 2FA ===
@@ -47,80 +53,122 @@ const AVAILABLE_COMMANDS: CommandDefinition[] = [
   //   params: [{ id: "licensePath", name: "Ruta de Licencia", type: "text" }],
   //   method: TSPlusAPI.activate,
   // },
-  // {
-  //   id: "install_volume_license_server",
-  //   name: "Instalar Servidor de Licencias por Volumen",
-  //   description:
-  //     "Comando para instalar un servidor de licencias por volumen en un solo paso.",
-  //   params: [
-  //     { id: "licenseKey", name: "Clave de Licencia", type: "text" },
-  //     { id: "users", name: "Número de Usuarios", type: "number" },
-  //     {
-  //       id: "edition",
-  //       name: "Edición",
-  //       type: "select",
-  //       selectOptions: [
-  //         { id: "Enterprise", value: "Enterprise" },
-  //         { id: "Standard", value: "Standard" },
-  //         { id: "Advanced", value: "Advanced" },
-  //       ],
-  //     },
-  //     { id: "supportYears", name: "Años de Soporte", type: "number" },
-  //   ],
-  // * We will need the next paramaters later (We just need above for testing)
-  // {
-  //   id: "activatesecurityaddon",
-  //   name: "Paquete de Seguridad",
-  //   type: "select",
-  //   selectOptions: [
-  //     { id: "Basic", value: "Basic" },
-  //     { id: "Standard", value: "Standard" },
-  //     { id: "Advanced", value: "Advanced" },
-  //     { id: "Ultimate", value: "Ultimate" },
-  //   ],
-  // },
-  // {
-  //   id: "comments",
-  //   name: "Comentarios",
-  //   type: "text",
-  // },
-  //   method: TSPlusAPI.installVolumeLicenseServer,
-  // },
+  {
+    id: "install_volume_license_server",
+    name: "Instalar Servidor de Licencias por Volumen",
+    description:
+      "Comando para instalar un servidor de licencias por volumen en un solo paso.",
+    params: [
+      {
+        id: "licenseKey",
+        name: "Clave de Licencia",
+        type: "text",
+        placeholder: "XXXXX-XXXXX-XXXXX-XXXXX-XXXXX",
+      },
+      {
+        id: "users",
+        name: "Número de Usuarios",
+        type: "number",
+        placeholder: "10",
+      },
+      {
+        id: "edition",
+        name: "Edición",
+        type: "select",
+        selectOptions: [
+          { id: "Enterprise", value: "Enterprise" },
+          { id: "Standard", value: "Standard" },
+          { id: "Advanced", value: "Advanced" },
+        ],
+        placeholder: "Enterprise",
+      },
+      {
+        id: "supportYears",
+        name: "Años de Soporte",
+        type: "number",
+        placeholder: "1",
+      },
+    ],
+    // * We will need the next paramaters later (We just need above for testing)
+    // {
+    //   id: "activatesecurityaddon",
+    //   name: "Paquete de Seguridad",
+    //   type: "select",
+    //   selectOptions: [
+    //     { id: "Basic", value: "Basic" },
+    //     { id: "Standard", value: "Standard" },
+    //     { id: "Advanced", value: "Advanced" },
+    //     { id: "Ultimate", value: "Ultimate" },
+    //   ],
+    // },
+    // {
+    //   id: "comments",
+    //   name: "Comentarios",
+    //   type: "text",
+    // },
+    schema: volumeInstallSchema,
+    method: TSPlusAPI.installVolumeLicenseServer,
+  },
   {
     id: "volume_act",
     name: "Activar Licencia de Volumen",
     description: "Comando para activar una licencia por volumen.",
     params: [
-      { id: "license", name: "Licencia", type: "text" },
-      { id: "users", name: "Usuarios", type: "number" },
+      {
+        id: "license",
+        name: "Licencia",
+        type: "text",
+        placeholder: "XXXXX-XXXXX-XXXXX-XXXXX-XXXXX",
+      },
+      { id: "users", name: "Usuarios", type: "number", placeholder: "10" },
       {
         id: "edition",
         name: "Edición",
         type: "select",
-        selectOptions: [{ id: "Enterprise", value: "Enterprise" }],
+        selectOptions: [
+          { id: "Enterprise", value: "Enterprise" },
+          { id: "Standard", value: "Standard" },
+          { id: "Advanced", value: "Advanced" },
+        ],
+        placeholder: "Enterprise",
       },
-      { id: "supportYears", name: "Años de Soporte", type: "number" },
+      {
+        id: "supportYears",
+        name: "Años de Soporte",
+        type: "number",
+        placeholder: "1",
+      },
     ],
+    schema: volumeActivationSchema,
     method: TSPlusAPI.volumeActivate,
   },
   {
     id: "volume_en_dis",
     name: "Deshabilitar Licencia de Volumen",
     description: "Comando para deshabilitar una licencia por volumen.",
-    params: [{ id: "license", name: "Licencia", type: "text" }],
+    params: [
+      {
+        id: "license",
+        name: "Licencia",
+        type: "text",
+        placeholder: "XXXXX-XXXXX-XXXXX-XXXXX-XXXXX",
+      },
+    ],
+    schema: volumeDisableSchema,
     method: TSPlusAPI.volumeDisable,
   },
-  {
-    id: "update_volume",
-    name: "Actualizar Licencia de Volumen",
-    description:
-      "Comando para actualizar los usuarios de una licencia por volumen.",
-    params: [
-      { id: "license", name: "Licencia", type: "text" },
-      { id: "users", name: "Usuarios", type: "number" },
-    ],
-    method: TSPlusAPI.updateVolume,
-  },
+  // {
+  //   id: "update_volume",
+  //   name: "Actualizar Licencia de Volumen",
+  //   description:
+  //     "Comando para actualizar los usuarios de una licencia por volumen.",
+  //   params: [
+  //     { id: "license", name: "Licencia", type: "text" },
+  //     { id: "users", name: "Usuarios", type: "number" },
+  //   ],
+  //   schema: volumeUpdateSchema,
+  //   method: TSPlusAPI.updateVolume,
+  // },
   // {
   //   id: "license_credits",
   //   name: "Desplegar creditos de licencia disponible para la llave de licencia",
