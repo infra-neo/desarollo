@@ -8,21 +8,16 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { Play } from "lucide-react";
 import AVAILABLE_COMMANDS from "@/utils/tsplusCommands";
 import type { CommandDefinition, CommandMethod } from "@/types/command.types";
 import SelectWithTooltip from "../common/SelectWithTooltip";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+
 import CommandParamsForm from "./CommandParamsForm";
 import ModalConfirmCommand from "../common/ModalConfirmCommand";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 
 interface Props {
   server: any;
@@ -32,21 +27,39 @@ interface Props {
 const ActionPanel = ({ server, onClose }: Props) => {
   const [isExecuting, setIsExecuting] = useState(false);
   const [selectedCommand, setSelectedCommand] = useState("");
-  const [paramsValues, setParamsValues] = useState<Record<string, string>>({});
-  const [error, setError] = useState(null);
+  const [paramsValues, setParamsValues] = useState<
+    Record<string, string | number>
+  >({});
   const [openModal, setOpenModal] = useState(false);
 
   const commandDefinition = AVAILABLE_COMMANDS.find(
     (command) => command.id === selectedCommand
   );
 
+  const defaultSchema = z.object({});
+
+  const currentSchema = commandDefinition?.schema || defaultSchema;
+
+  type FormData = z.infer<typeof currentSchema>;
+
+  const {
+    register,
+    handleSubmit,
+    control,
+    formState: { errors },
+    reset,
+  } = useForm<FormData>({
+    resolver: zodResolver(currentSchema),
+    mode: "onSubmit",
+  });
+
   const handleCommandChange = (value: string) => {
     setSelectedCommand(value);
     setParamsValues({});
-    setError(null);
+    reset();
   };
 
-  const handleParamChange = (paramId: string, value: string) => {
+  const handleParamChange = (paramId: string, value: string | number) => {
     setParamsValues((prev) => ({
       ...prev,
       [paramId]: value,
@@ -56,7 +69,6 @@ const ActionPanel = ({ server, onClose }: Props) => {
   const executedCommand = async () => {
     if (!commandDefinition) return;
 
-    setError(null);
     setIsExecuting(true);
 
     try {
@@ -78,8 +90,9 @@ const ActionPanel = ({ server, onClose }: Props) => {
   const isDisabled =
     isExecuting ||
     !commandDefinition ||
-    !selectedCommand ||
-    Object.values(paramsValues).some((value) => !value);
+    Object.keys(paramsValues).length === 0 ||
+    Object.values(paramsValues).some((value) => !value) ||
+    Object.values(errors).some((error) => error);
 
   return (
     <>
@@ -132,14 +145,16 @@ const ActionPanel = ({ server, onClose }: Props) => {
               commandDefinition={commandDefinition as CommandDefinition}
               paramsValues={paramsValues}
               handleParamChange={handleParamChange}
+              register={register}
+              control={control}
+              errors={errors}
             />
           </div>
 
           <form
-            onSubmit={(e) => {
-              e.preventDefault();
+            onSubmit={handleSubmit(() => {
               setOpenModal(true);
-            }}
+            })}
             className="flex pt-4 space-x-3"
           >
             <Button

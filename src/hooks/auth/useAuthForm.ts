@@ -9,6 +9,7 @@ import {
   type LoginFormData,
   type RegisterFormData,
 } from "@/utils/validations";
+import { toast } from "sonner";
 
 const useAuthForm = () => {
   const { login } = useAuth();
@@ -27,12 +28,19 @@ const useAuthForm = () => {
   });
 
   const onSubmit = (data: LoginFormData | RegisterFormData) => {
-    login({
-      id: Date.now(),
-      name: "name" in data ? data.name : "Usuario",
-      email: data.email,
-    });
-    navigate("/dashboard");
+    const success = login(
+      {
+        id: Date.now(),
+        name: "name" in data ? data.name : "Usuario",
+        email: data.email,
+      },
+      data.password
+    );
+    if (success) return navigate("/dashboard");
+
+    toast.error(
+      "Credenciales incorrectas. Verifica que el usuario y contraseña sean correctas"
+    );
   };
 
   const toogleLogin = () => {
