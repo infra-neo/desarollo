@@ -46,11 +46,11 @@ const ActionPanel = ({ server, onClose }: Props) => {
     register,
     handleSubmit,
     control,
-    formState: { errors },
+    formState: { errors, isValid, isDirty },
     reset,
   } = useForm<FormData>({
     resolver: zodResolver(currentSchema),
-    mode: "onSubmit",
+    mode: "onChange",
   });
 
   const handleCommandChange = (value: string) => {
@@ -87,12 +87,7 @@ const ActionPanel = ({ server, onClose }: Props) => {
     }
   };
 
-  const isDisabled =
-    isExecuting ||
-    !commandDefinition ||
-    Object.keys(paramsValues).length === 0 ||
-    Object.values(paramsValues).some((value) => !value) ||
-    Object.values(errors).some((error) => error);
+  const isDisabled = isExecuting || !commandDefinition || !isValid || !isDirty;
 
   return (
     <>
