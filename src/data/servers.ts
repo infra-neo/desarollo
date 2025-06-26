@@ -1,5 +1,5 @@
 export interface Server {
-  id: number;
+  guid: string;
   name: string;
   url: string;
   icon: string;
@@ -7,11 +7,11 @@ export interface Server {
   cpu: number;
   memory: number;
   uptime: string;
-  groupId: number;
+  groupId: string;
 }
 
 export interface ServerGroup {
-  id: number;
+  guid: string;
   name: string;
   description: string;
   icon: string;
@@ -19,22 +19,22 @@ export interface ServerGroup {
 
 export const serverGroups: ServerGroup[] = [
   {
-    id: 1,
+    guid: "some-guid-1",
     name: "Producción",
     description: "Servidores en ambiente de producción",
-    icon: "server"
+    icon: "server",
   },
   {
-    id: 2,
+    guid: "some-guid-2",
     name: "Desarrollo",
     description: "Servidores de pruebas y desarrollo",
-    icon: "code"
-  }
+    icon: "code",
+  },
 ];
 
 export const servers: Server[] = [
   {
-    id: 1,
+    guid: "some-guid-1",
     name: "Servidor Web Principal",
     url: "https://web.miempresa.com",
     icon: "cloud",
@@ -42,10 +42,10 @@ export const servers: Server[] = [
     cpu: 45,
     memory: 62,
     uptime: "15 días",
-    groupId: 1
+    groupId: "some-guid-1",
   },
   {
-    id: 2,
+    guid: "some-guid-2",
     name: "Base de Datos MySQL",
     url: "mysql://db.miempresa.com",
     icon: "database",
@@ -53,10 +53,10 @@ export const servers: Server[] = [
     cpu: 23,
     memory: 78,
     uptime: "23 días",
-    groupId: 1
+    groupId: "some-guid-2",
   },
   {
-    id: 3,
+    guid: "some-guid-3",
     name: "Servidor de Pruebas",
     url: "https://test.miempresa.com",
     icon: "beaker",
@@ -64,6 +64,6 @@ export const servers: Server[] = [
     cpu: 15,
     memory: 40,
     uptime: "7 días",
-    groupId: 2
-  }
+    groupId: "some-guid-3",
+  },
 ];

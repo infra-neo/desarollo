@@ -2,13 +2,17 @@ import Servers from "@/services/servers";
 import { useQuery } from "@tanstack/react-query";
 
 const useServerGroup = () => {
-  const { data, isLoading, error } = useQuery({
+  const {
+    data: serverGroups,
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: ["server-group"],
     queryFn: () => Servers.getGroupServers(),
     enabled: true,
   });
 
-  return { data, isLoading, error };
+  return { serverGroups, isLoading, error };
 };
 
 export default useServerGroup;

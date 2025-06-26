@@ -3,7 +3,7 @@ import DashboardLayout from "../components/layout/DashboardLayout";
 import ActionPanel from "../components/dashboard/ActionPanel";
 import ServerGroupCards from "../components/dashboard/ServerGroupCards";
 import useAuth from "@/hooks/auth/useAuth";
-import { servers, serverGroups } from "../data/servers";
+import { servers } from "../data/servers";
 import type { Server } from "../data/servers";
 import { motion, AnimatePresence } from "framer-motion";
 import CreateServerGroupModal from "@/components/dashboard/ModalCreateGroup";
@@ -14,7 +14,7 @@ const DashboardPage = () => {
   const [selectedServer, setSelectedServer] = useState<Server | null>(null);
   const [isVisible, setIsVisible] = useState(false);
 
-  const { data, isLoading, error } = useServerGroup();
+  const { serverGroups, isLoading } = useServerGroup();
 
   useEffect(() => {
     // Activar la animación cuando el componente se monta

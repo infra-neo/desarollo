@@ -1,13 +1,14 @@
 import { useState } from "react";
-import type { ServerGroup, Server } from "../../data/servers";
+import type { Server } from "../../data/servers";
 import { motion, AnimatePresence } from "framer-motion";
 import DashboardGrid from "./DashboardGrid";
 import { Button } from "@/components/ui/button";
 import { cardVariants, containerVariants } from "@/utils/animations";
 import { Loader2 } from "lucide-react";
+import type { GroupServer } from "@/types/server.types";
 
 interface ServerGroupCardsProps {
-  groups: ServerGroup[];
+  groups: GroupServer[] | undefined;
   servers: Server[];
   selectedServer: Server | null;
   onServerSelect: (server: Server | null) => void;
@@ -21,13 +22,13 @@ const ServerGroupCards = ({
   onServerSelect,
   isLoading,
 }: ServerGroupCardsProps) => {
-  const [expandedGroupId, setExpandedGroupId] = useState<number | null>(null);
+  const [expandedGroupId, setExpandedGroupId] = useState<string | null>(null);
 
-  const toggleGroup = (groupId: number) => {
+  const toggleGroup = (groupId: string) => {
     setExpandedGroupId(expandedGroupId === groupId ? null : groupId);
   };
 
-  if (isLoading) {
+  if (isLoading || !groups) {
     return (
       <div className="flex justify-center mt-36">
         <Loader2 className="animate-spin" color="blue" size={40} />
@@ -44,13 +45,13 @@ const ServerGroupCards = ({
     >
       {groups.map((group) => (
         <motion.div
-          key={group.id}
+          key={group.guid}
           className="overflow-hidden bg-white rounded-lg shadow-md dark:bg-gray-800"
           variants={cardVariants}
         >
           <div
             className="flex justify-between items-center p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700"
-            onClick={() => toggleGroup(group.id)}
+            onClick={() => toggleGroup(group.guid)}
           >
             <div className="flex items-center space-x-3">
               <div className="p-2 bg-blue-100 rounded-lg dark:bg-indigo-900">
@@ -69,22 +70,22 @@ const ServerGroupCards = ({
               </div>
               <div>
                 <h3 className="font-medium text-gray-900 dark:text-white">
-                  {group.name}
+                  {group.nombre}
                 </h3>
                 <p className="text-sm text-gray-500 dark:text-gray-400">
-                  {group.description}
+                  {group.descripcion}
                 </p>
               </div>
             </div>
             <Button variant="gradient">
-              {expandedGroupId === group.id
+              {expandedGroupId === group.guid
                 ? "Ocultar servidores"
                 : "Ver servidores"}
             </Button>
           </div>
 
           <AnimatePresence>
-            {expandedGroupId === group.id && (
+            {expandedGroupId === group.guid && (
               <motion.div
                 initial={{ height: 0, opacity: 0 }}
                 animate={{ height: "auto", opacity: 1 }}
@@ -95,7 +96,7 @@ const ServerGroupCards = ({
                 <div className="p-4 border-t border-gray-200 dark:border-gray-700">
                   <DashboardGrid
                     servers={servers.filter(
-                      (server) => server.groupId === group.id
+                      (server) => server.groupId === group.guid
                     )}
                     selectedServer={selectedServer}
                     onServerSelect={onServerSelect}
