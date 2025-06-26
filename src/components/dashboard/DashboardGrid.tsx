@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Grid } from "lucide-react";
 import ServerCard from "./ServerCard";
 import { motion } from "framer-motion";
+import ModalCreateServer from "./ModalCreateServer";
 
 interface Props {
   servers: any[];
@@ -20,7 +21,9 @@ const DashboardGrid = ({ servers, selectedServer, onServerSelect }: Props) => {
     <div className="mb-8">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-bold text-gray-900">Servidores</h2>
-        <div className="flex items-center">
+
+        <div className="flex gap-3 items-center">
+          <ModalCreateServer />
           <div className="relative">
             <input
               type="text"
@@ -44,7 +47,7 @@ const DashboardGrid = ({ servers, selectedServer, onServerSelect }: Props) => {
               />
             </svg>
           </div>
-          <button className="flex justify-center items-center p-2 ml-2 text-gray-500 bg-gray-100 rounded-lg hover:bg-gray-200">
+          <button className="flex justify-center items-center p-2 text-gray-500 bg-gray-100 rounded-lg hover:bg-gray-200">
             <Grid className="w-5 h-5" />
           </button>
         </div>

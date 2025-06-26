@@ -49,7 +49,7 @@ const ActionPanel = ({ server, onClose }: Props) => {
     formState: { errors, isValid, isDirty },
     reset,
   } = useForm<FormData>({
-    resolver: zodResolver(currentSchema),
+    resolver: zodResolver(currentSchema as any),
     mode: "onChange",
   });
 
