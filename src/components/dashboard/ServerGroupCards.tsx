@@ -4,12 +4,14 @@ import { motion, AnimatePresence } from "framer-motion";
 import DashboardGrid from "./DashboardGrid";
 import { Button } from "@/components/ui/button";
 import { cardVariants, containerVariants } from "@/utils/animations";
+import { Loader2 } from "lucide-react";
 
 interface ServerGroupCardsProps {
   groups: ServerGroup[];
   servers: Server[];
   selectedServer: Server | null;
   onServerSelect: (server: Server | null) => void;
+  isLoading: boolean;
 }
 
 const ServerGroupCards = ({
@@ -17,12 +19,21 @@ const ServerGroupCards = ({
   servers,
   selectedServer,
   onServerSelect,
+  isLoading,
 }: ServerGroupCardsProps) => {
   const [expandedGroupId, setExpandedGroupId] = useState<number | null>(null);
 
   const toggleGroup = (groupId: number) => {
     setExpandedGroupId(expandedGroupId === groupId ? null : groupId);
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center mt-36">
+        <Loader2 className="animate-spin" color="blue" size={40} />
+      </div>
+    );
+  }
 
   return (
     <motion.div

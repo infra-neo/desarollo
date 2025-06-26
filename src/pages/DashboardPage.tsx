@@ -7,11 +7,14 @@ import { servers, serverGroups } from "../data/servers";
 import type { Server } from "../data/servers";
 import { motion, AnimatePresence } from "framer-motion";
 import CreateServerGroupModal from "@/components/dashboard/ModalCreateGroup";
+import useServerGroup from "@/hooks/userServerGroup";
 
 const DashboardPage = () => {
   const { user } = useAuth();
   const [selectedServer, setSelectedServer] = useState<Server | null>(null);
   const [isVisible, setIsVisible] = useState(false);
+
+  const { data, isLoading, error } = useServerGroup();
 
   useEffect(() => {
     // Activar la animación cuando el componente se monta
@@ -50,6 +53,7 @@ const DashboardPage = () => {
                 servers={servers}
                 selectedServer={selectedServer}
                 onServerSelect={setSelectedServer}
+                isLoading={isLoading}
               />
             )}
           </AnimatePresence>

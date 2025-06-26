@@ -1,13 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card";
-import {
-  Database,
-  Cloud,
-  Monitor,
-  Wifi,
-  Shield,
-  Server,
-  ChevronRight,
-} from "lucide-react";
+import { Server, ChevronRight } from "lucide-react";
 
 interface Props {
   server: any;
@@ -16,15 +8,7 @@ interface Props {
 }
 
 const ServerCard = ({ server, isSelected, onClick }: Props) => {
-  const iconMap: Record<string, any> = {
-    database: Database,
-    cloud: Cloud,
-    monitor: Monitor,
-    wifi: Wifi,
-    shield: Shield,
-  };
-
-  const IconComponent = iconMap[server.icon] || Server;
+  const IconComponent = Server;
 
   return (
     <Card
