@@ -1,6 +1,6 @@
 import { ADMIN_EMAIL, ADMIN_PASSWORD } from "@/constants/adminCredential";
 import useLocalStorage from "@/hooks/useLocalStorage";
-import React, { createContext, useState } from "react";
+import React, { createContext } from "react";
 
 type User = {
   id: string | number;

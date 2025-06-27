@@ -3,18 +3,17 @@ import DashboardLayout from "../components/layout/DashboardLayout";
 import ActionPanel from "../components/dashboard/ActionPanel";
 import ServerGroupCards from "../components/dashboard/ServerGroupCards";
 import useAuth from "@/hooks/auth/useAuth";
-import { servers } from "../data/servers";
-import type { Server } from "../data/servers";
 import { motion, AnimatePresence } from "framer-motion";
 import CreateServerGroupModal from "@/components/dashboard/ModalCreateGroup";
 import useServerGroup from "@/hooks/userServerGroup";
+import { useServerContext } from "@/context/ServerContext";
 
 const DashboardPage = () => {
   const { user } = useAuth();
-  const [selectedServer, setSelectedServer] = useState<Server | null>(null);
-  const [isVisible, setIsVisible] = useState(false);
-
   const { serverGroups, isLoading } = useServerGroup();
+  const { selectedServer, onServerSelect } = useServerContext();
+
+  const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
     // Activar la animación cuando el componente se monta
@@ -48,13 +47,7 @@ const DashboardPage = () => {
 
           <AnimatePresence>
             {isVisible && (
-              <ServerGroupCards
-                groups={serverGroups}
-                servers={servers}
-                selectedServer={selectedServer}
-                onServerSelect={setSelectedServer}
-                isLoading={isLoading}
-              />
+              <ServerGroupCards groups={serverGroups} isLoading={isLoading} />
             )}
           </AnimatePresence>
 
@@ -68,7 +61,7 @@ const DashboardPage = () => {
               >
                 <ActionPanel
                   server={selectedServer}
-                  onClose={() => setSelectedServer(null)}
+                  onClose={() => onServerSelect(null)}
                 />
               </motion.div>
             )}

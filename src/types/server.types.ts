@@ -4,3 +4,12 @@ export interface GroupServer {
   empresa_guid: string;
   guid: string;
 }
+
+export interface Server {
+  ip: string;
+  tunel: string;
+  nombre: string;
+  descripcion: string;
+  grupo_guid: string;
+  guid: string;
+}

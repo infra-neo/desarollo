@@ -18,9 +18,10 @@ import ModalConfirmCommand from "../common/ModalConfirmCommand";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import type { Server } from "@/types/server.types";
 
 interface Props {
-  server: any;
+  server: Server | null;
   onClose: () => void;
 }
 
@@ -106,7 +107,7 @@ const ActionPanel = ({ server, onClose }: Props) => {
           <div className="flex justify-between items-center">
             <div>
               <CardTitle className="text-lg">
-                Panel de Control - {server.name}
+                Panel de Control - {server?.nombre}
               </CardTitle>
               <CardDescription>
                 Ejecuta acciones en este servidor

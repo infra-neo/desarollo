@@ -1,13 +1,16 @@
 import { Card, CardContent } from "@/components/ui/card";
+import type { Server as ServerType } from "@/types/server.types";
 import { Server, ChevronRight } from "lucide-react";
 
 interface Props {
-  server: any;
+  server: ServerType;
   isSelected: boolean;
-  onClick: (server: any) => void;
+  onClick: (server: ServerType) => void;
 }
 
 const ServerCard = ({ server, isSelected, onClick }: Props) => {
+  // * Actualmente esta como isOnline true para que aparezca la card del server como en linea, despues se modificara para agregar el atributo online
+  const isOnline = true;
   const IconComponent = Server;
 
   return (
@@ -25,7 +28,7 @@ const ServerCard = ({ server, isSelected, onClick }: Props) => {
             className={`
             w-12 h-12 rounded-xl flex items-center justify-center
             ${
-              server.status === "online"
+              isOnline
                 ? "card-gradient"
                 : "bg-gradient-to-r from-red-400 to-red-600"
             }
@@ -36,26 +39,26 @@ const ServerCard = ({ server, isSelected, onClick }: Props) => {
           <div
             className={`
             w-3 h-3 rounded-full
-            ${server.status === "online" ? "bg-green-500" : "bg-red-500"}
+            ${isOnline ? "bg-green-500" : "bg-red-500"}
           `}
           />
         </div>
 
-        <h3 className="mb-1 font-semibold text-gray-900">{server.name}</h3>
-        <p className="mb-3 text-sm text-gray-500 truncate">{server.url}</p>
+        <h3 className="mb-1 font-semibold text-gray-900">{server.nombre}</h3>
+        <p className="mb-3 text-sm text-gray-500 truncate">{server.ip}</p>
 
         <div className="flex justify-between items-center text-xs">
           <span
             className={`
             px-2 py-1 rounded-full font-medium
             ${
-              server.status === "online"
-                ? "bg-green-100 text-green-800"
-                : "bg-red-100 text-red-800"
+              isOnline
+                ? "text-green-800 bg-green-100"
+                : "text-red-800 bg-red-100"
             }
           `}
           >
-            {server.status === "online" ? "En línea" : "Desconectado"}
+            {isOnline ? "En línea" : "Desconectado"}
           </span>
           <ChevronRight className="w-4 h-4 text-gray-400" />
         </div>

@@ -1,5 +1,4 @@
 import { useState } from "react";
-import type { Server } from "../../data/servers";
 import { motion, AnimatePresence } from "framer-motion";
 import DashboardGrid from "./DashboardGrid";
 import { Button } from "@/components/ui/button";
@@ -9,19 +8,10 @@ import type { GroupServer } from "@/types/server.types";
 
 interface ServerGroupCardsProps {
   groups: GroupServer[] | undefined;
-  servers: Server[];
-  selectedServer: Server | null;
-  onServerSelect: (server: Server | null) => void;
   isLoading: boolean;
 }
 
-const ServerGroupCards = ({
-  groups,
-  servers,
-  selectedServer,
-  onServerSelect,
-  isLoading,
-}: ServerGroupCardsProps) => {
+const ServerGroupCards = ({ groups, isLoading }: ServerGroupCardsProps) => {
   const [expandedGroupId, setExpandedGroupId] = useState<string | null>(null);
 
   const toggleGroup = (groupId: string) => {
@@ -94,13 +84,7 @@ const ServerGroupCards = ({
                 className="overflow-hidden"
               >
                 <div className="p-4 border-t border-gray-200 dark:border-gray-700">
-                  <DashboardGrid
-                    servers={servers.filter(
-                      (server) => server.groupId === group.guid
-                    )}
-                    selectedServer={selectedServer}
-                    onServerSelect={onServerSelect}
-                  />
+                  <DashboardGrid />
                 </div>
               </motion.div>
             )}
