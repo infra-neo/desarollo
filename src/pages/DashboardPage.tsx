@@ -12,7 +12,6 @@ const DashboardPage = () => {
   const { user } = useAuth();
   const { serverGroups, isLoading } = useServerGroup();
   const { selectedServer, onServerSelect } = useServerContext();
-
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {

@@ -8,7 +8,7 @@ import { useServerContext } from "@/context/ServerContext";
 
 const DashboardGrid = () => {
   const { selectedServer, onServerSelect } = useServerContext();
-  const { servers, isLoading } = useServer();
+  const { servers, isLoading } = useServer("some-guid");
   const [searchTerm, setSearchTerm] = useState("");
 
   const selectedGuidServer = selectedServer?.guid;

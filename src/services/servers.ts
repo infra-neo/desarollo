@@ -1,5 +1,4 @@
-import type { GroupServer } from "@/types/server.types";
-import type { Server } from "@/types/server.types";
+import type { GroupServer, Server } from "@/types/server.types";
 
 const BASE_URL = "http://localhost:8000/servers";
 
@@ -26,30 +25,22 @@ const MOCKS_GROUP_SERVERS = [
   },
 ];
 
-const MOCK_SERVERS = [
+const MOCK_SERVERS: Server[] = [
   {
     ip: "192.168.1.1",
-    tunel: "192.168.1.2",
-    nombre: "Servidor de prueba",
-    descripcion: "Servidor de prueba",
-    grupo_guid: "1",
+    tunel: "https://tunel.miempresa.com",
+    nombre: "Servidor 1",
+    descripcion: "Servidor de pruebas",
+    grupo_guid: "some-guid-1",
     guid: "some-guid-1",
   },
   {
-    ip: "172.16.1.1",
-    tunel: "172.16.1.2",
-    nombre: "Servidor de produccion",
-    descripcion: "Servidor de produccion",
-    grupo_guid: "2",
+    ip: "192.168.1.2",
+    tunel: "https://tunel.miempresa.com",
+    nombre: "Servidor 2",
+    descripcion: "Servidor de pruebas",
+    grupo_guid: "some-guid-2",
     guid: "some-guid-2",
-  },
-  {
-    ip: "10.0.0.1",
-    tunel: "10.0.0.2",
-    nombre: "Servidor de desarrollo",
-    descripcion: "Servidor de desarrollo",
-    grupo_guid: "3",
-    guid: "some-guid-3",
   },
 ];
 
@@ -67,7 +58,7 @@ class Servers {
     }
   }
 
-  static async getServers(serverId: string): Promise<Server[]> {
+  static async getServers(groupServersGuid: string): Promise<Server[]> {
     try {
       const response = (await simulateApiCall(MOCK_SERVERS)) as Server[];
       return response;

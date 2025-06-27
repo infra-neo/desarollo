@@ -21,7 +21,7 @@ import { z } from "zod";
 import type { Server } from "@/types/server.types";
 
 interface Props {
-  server: Server | null;
+  server: Server;
   onClose: () => void;
 }
 
@@ -107,7 +107,7 @@ const ActionPanel = ({ server, onClose }: Props) => {
           <div className="flex justify-between items-center">
             <div>
               <CardTitle className="text-lg">
-                Panel de Control - {server?.nombre}
+                Panel de Control - {server.nombre}
               </CardTitle>
               <CardDescription>
                 Ejecuta acciones en este servidor

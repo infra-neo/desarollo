@@ -9,7 +9,6 @@ interface Props {
 }
 
 const ServerCard = ({ server, isSelected, onClick }: Props) => {
-  // * Actualmente esta como isOnline true para que aparezca la card del server como en linea, despues se modificara para agregar el atributo online
   const isOnline = true;
   const IconComponent = Server;
 
