@@ -1,26 +1,37 @@
 import { useState } from "react";
-import { Grid } from "lucide-react";
+import { Grid, Loader2 } from "lucide-react";
 import ServerCard from "./ServerCard";
 import { motion } from "framer-motion";
+import ModalCreateServer from "./ModalCreateServer";
+import useServer from "@/hooks/useServer";
+import { useServerContext } from "@/context/ServerContext";
 
-interface Props {
-  servers: any[];
-  selectedServer: any;
-  onServerSelect: (server: any) => void;
-}
-
-const DashboardGrid = ({ servers, selectedServer, onServerSelect }: Props) => {
+const DashboardGrid = () => {
+  const { selectedServer, onServerSelect } = useServerContext();
+  const { servers, isLoading } = useServer("some-guid");
   const [searchTerm, setSearchTerm] = useState("");
 
-  const filteredServers = servers.filter((server) =>
-    server.name.toLowerCase().includes(searchTerm.toLowerCase())
+  const selectedGuidServer = selectedServer?.guid;
+
+  const filteredServers = servers?.filter((server) =>
+    server.nombre.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  if (isLoading || !servers || filteredServers === undefined) {
+    return (
+      <div className="flex justify-center py-16">
+        <Loader2 className="animate-spin" color="blue" size={40} />
+      </div>
+    );
+  }
 
   return (
     <div className="mb-8">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-bold text-gray-900">Servidores</h2>
-        <div className="flex items-center">
+
+        <div className="flex gap-3 items-center">
+          <ModalCreateServer />
           <div className="relative">
             <input
               type="text"
@@ -44,7 +55,7 @@ const DashboardGrid = ({ servers, selectedServer, onServerSelect }: Props) => {
               />
             </svg>
           </div>
-          <button className="flex justify-center items-center p-2 ml-2 text-gray-500 bg-gray-100 rounded-lg hover:bg-gray-200">
+          <button className="flex justify-center items-center p-2 text-gray-500 bg-gray-100 rounded-lg hover:bg-gray-200">
             <Grid className="w-5 h-5" />
           </button>
         </div>
@@ -58,14 +69,14 @@ const DashboardGrid = ({ servers, selectedServer, onServerSelect }: Props) => {
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {filteredServers.map((server, index) => (
             <motion.div
-              key={server.id}
+              key={server.guid}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.1 * index }}
             >
               <ServerCard
                 server={server}
-                isSelected={selectedServer?.id === server.id}
+                isSelected={selectedGuidServer === server.guid}
                 onClick={onServerSelect}
               />
             </motion.div>
