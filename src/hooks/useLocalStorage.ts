@@ -9,7 +9,7 @@ const useLocalStorage = <T>(
       const item = window.localStorage.getItem(key);
       return item ? JSON.parse(item) : initialValue;
     } catch (error) {
-      console.error("Error when get key");
+      console.error("Error when get key", error, key);
       return initialValue;
     }
   });

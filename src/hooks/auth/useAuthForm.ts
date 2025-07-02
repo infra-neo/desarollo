@@ -1,4 +1,3 @@
-import { useNavigate } from "react-router";
 import useAuth from "./useAuth";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -9,11 +8,9 @@ import {
   type LoginFormData,
   type RegisterFormData,
 } from "@/utils/validations";
-import { toast } from "sonner";
 
 const useAuthForm = () => {
   const { login } = useAuth();
-  const navigate = useNavigate();
   const [isLogin, setIsLogin] = useState(true);
 
   const {
@@ -28,19 +25,7 @@ const useAuthForm = () => {
   });
 
   const onSubmit = (data: LoginFormData | RegisterFormData) => {
-    const success = login(
-      {
-        id: Date.now(),
-        name: "name" in data ? data.name : "Usuario",
-        email: data.email,
-      },
-      data.password
-    );
-    if (success) return navigate("/dashboard");
-
-    toast.error(
-      "Credenciales incorrectas. Verifica que el usuario y contraseña sean correctas"
-    );
+    login(data);
   };
 
   const toogleLogin = () => {
