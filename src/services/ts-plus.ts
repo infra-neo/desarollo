@@ -1,7 +1,4 @@
-import axios from "axios";
-
-// URL base para todas las solicitudes a la API de TSPlus
-const BASE_URL = "http://localhost:8020/tsplus";
+import api from "@/utils/api";
 
 // Variables de configuración para pruebas - Modifica estas constantes para tus pruebas
 const DEFAULT_LICENSE = import.meta.env.VITE_LICENCE;
@@ -9,14 +6,22 @@ const DEFAULT_LICENSE_PATH = import.meta.env.VITE_LICENSE_PATH;
 
 // Clase para manejar todas las solicitudes a la API de TSPlus
 class TSPlusAPI {
+  static async downloadTSPlus() {
+    try {
+      const response = await api.post(`/commands/download_tsplus`);
+      return response.data;
+    } catch (error: any) {
+      throw new Error(`Error al descargar TS Plus: ${error.message}`);
+    }
+  }
   // Método para obtener información del servidor
   static async getServer(serverId: string) {
     try {
-      const response = await axios.get(
+      const response = await api.get(
         `http://localhost:8005/servers/servers/?arg=guid=${serverId}`
       );
       return response.data[0];
-    } catch (error) {
+    } catch (error: any) {
       throw new Error(`Error al obtener datos del servidor: ${error.message}`);
     }
   }
@@ -30,8 +35,8 @@ class TSPlusAPI {
     comments?: string
   ) {
     try {
-      const response = await axios.post(
-        `${BASE_URL}/install_tsplus/?license=${licenseKey}`,
+      const response = await api.post(
+        `/install_tsplus/?license=${licenseKey}`,
         {
           users,
           edition,
@@ -41,7 +46,7 @@ class TSPlusAPI {
         }
       );
       return response.data;
-    } catch (error) {
+    } catch (error: any) {
       throw new Error(
         `Error al instalar servidor de licencias por volumen: ${error.message}`
       );
@@ -54,11 +59,11 @@ class TSPlusAPI {
     option = "disable"
   ) {
     try {
-      const response = await axios.put(
-        `${BASE_URL}/volume_en_dis/?license=${license}&option=${option}`
+      const response = await api.put(
+        `/volume_en_dis/?license=${license}&option=${option}`
       );
       return response.data;
-    } catch (error) {
+    } catch (error: any) {
       throw new Error(`Error al procesar volumen: ${error.message}`);
     }
   }
@@ -73,18 +78,15 @@ class TSPlusAPI {
     silent: boolean = false // Agregado: por defecto en false para feedback visual
   ) {
     try {
-      const response = await axios.post(
-        `${BASE_URL}/volume_act/?license=${license}`,
-        {
-          users,
-          edition,
-          supportyears: supportYears,
-          comments, // Enviamos 'comments'
-          silent, // Enviamos 'silent'
-        }
-      );
+      const response = await api.post(`/volume_act/?license=${license}`, {
+        users,
+        edition,
+        supportyears: supportYears,
+        comments, // Enviamos 'comments'
+        silent, // Enviamos 'silent'
+      });
       return response.data;
-    } catch (error) {
+    } catch (error: any) {
       throw new Error(`Error al activar volumen: ${error.message}`);
     }
   }
@@ -92,11 +94,11 @@ class TSPlusAPI {
   // Método para actualizar licencias de volumen
   static async updateVolume(license: string = DEFAULT_LICENSE, users: string) {
     try {
-      const response = await axios.put(
-        `${BASE_URL}/update_volume/?license=${license}&users=${users}`
+      const response = await api.put(
+        `/update_volume/?license=${license}&users=${users}`
       );
       return response.data;
-    } catch (error) {
+    } catch (error: any) {
       throw new Error(`Error al actualizar volumen: ${error.message}`);
     }
   }
@@ -104,11 +106,11 @@ class TSPlusAPI {
   // Método para resetear 2FA
   static async reset2FA(user: string) {
     try {
-      const response = await axios.put(`${BASE_URL}/2FA_Reset/`, {
+      const response = await api.put(`/2FA_Reset/`, {
         users: [user],
       });
       return response.data;
-    } catch (error) {
+    } catch (error: any) {
       throw new Error(`Error al resetear 2FA: ${error.message}`);
     }
   }
@@ -121,7 +123,7 @@ class TSPlusAPI {
     email: string
   ) {
     try {
-      const response = await axios.put(`${BASE_URL}/2FA_Add_Users/`, {
+      const response = await api.put(`/2FA_Add_Users/`, {
         users: [
           {
             domainName,
@@ -132,7 +134,7 @@ class TSPlusAPI {
         ],
       });
       return response.data;
-    } catch (error) {
+    } catch (error: any) {
       throw new Error(`Error al añadir usuarios a 2FA: ${error.message}`);
     }
   }
@@ -140,11 +142,11 @@ class TSPlusAPI {
   // Método para añadir grupos a 2FA
   static async add2FAGroups(group: string) {
     try {
-      const response = await axios.put(`${BASE_URL}/2FA_Add_Groups/`, {
+      const response = await api.put(`/2FA_Add_Groups/`, {
         groups: [group],
       });
       return response.data;
-    } catch (error) {
+    } catch (error: any) {
       throw new Error(`Error al añadir grupos a 2FA: ${error.message}`);
     }
   }
@@ -152,9 +154,9 @@ class TSPlusAPI {
   // Método para listar usuarios de 2FA
   static async list2FAUsers() {
     try {
-      const response = await axios.get(`${BASE_URL}/2FA_List_Users/`);
+      const response = await api.get(`/2FA_List_Users/`);
       return response.data;
-    } catch (error) {
+    } catch (error: any) {
       throw new Error(`Error al listar usuarios de 2FA: ${error.message}`);
     }
   }
@@ -166,16 +168,13 @@ class TSPlusAPI {
     login: string
   ) {
     try {
-      const response = await axios.put(
-        `${BASE_URL}/license_credits/?license=${license}`,
-        {
-          login,
-          edition,
-          silent: false,
-        }
-      );
+      const response = await api.put(`/license_credits/?license=${license}`, {
+        login,
+        edition,
+        silent: false,
+      });
       return response.data;
-    } catch (error) {
+    } catch (error: any) {
       throw new Error(
         `Error al gestionar créditos de licencia: ${error.message}`
       );
@@ -189,16 +188,13 @@ class TSPlusAPI {
     login: string
   ) {
     try {
-      const response = await axios.put(
-        `${BASE_URL}/support_credits/?license=${license}`,
-        {
-          login,
-          edition,
-          silent: false,
-        }
-      );
+      const response = await api.put(`/support_credits/?license=${license}`, {
+        login,
+        edition,
+        silent: false,
+      });
       return response.data;
-    } catch (error) {
+    } catch (error: any) {
       throw new Error(
         `Error al gestionar créditos de soporte: ${error.message}`
       );
@@ -208,9 +204,9 @@ class TSPlusAPI {
   // Método para resetear licencia
   static async resetLicense() {
     try {
-      const response = await axios.put(`${BASE_URL}/reset_license/`);
+      const response = await api.put(`/reset_license/`);
       return response.data;
-    } catch (error) {
+    } catch (error: any) {
       throw new Error(`Error al resetear licencia: ${error.message}`);
     }
   }
@@ -218,11 +214,9 @@ class TSPlusAPI {
   // Método para activar
   static async activate(licensePath: string = DEFAULT_LICENSE_PATH) {
     try {
-      const response = await axios.post(
-        `${BASE_URL}/activate/?licensePath=${licensePath}`
-      );
+      const response = await api.post(`/activate/?licensePath=${licensePath}`);
       return response.data;
-    } catch (error) {
+    } catch (error: any) {
       throw new Error(`Error al activar: ${error.message}`);
     }
   }
@@ -230,9 +224,9 @@ class TSPlusAPI {
   // Método para obtener credenciales web
   static async getWebCredentials() {
     try {
-      const response = await axios.get(`${BASE_URL}/web_credentials/`);
+      const response = await api.get(`/web_credentials/`);
       return response.data;
-    } catch (error) {
+    } catch (error: any) {
       throw new Error(`Error al obtener credenciales web: ${error.message}`);
     }
   }
@@ -240,9 +234,9 @@ class TSPlusAPI {
   // Método para auditoría
   static async audit() {
     try {
-      const response = await axios.put(`${BASE_URL}/audit/`);
+      const response = await api.put(`/audit/`);
       return response.data;
-    } catch (error) {
+    } catch (error: any) {
       throw new Error(`Error en auditoría: ${error.message}`);
     }
   }
@@ -250,9 +244,9 @@ class TSPlusAPI {
   // Método para balanceo de carga
   static async loadBalancing() {
     try {
-      const response = await axios.put(`${BASE_URL}/load_balancing/`);
+      const response = await api.put(`/load_balancing/`);
       return response.data;
-    } catch (error) {
+    } catch (error: any) {
       throw new Error(`Error en balanceo de carga: ${error.message}`);
     }
   }
@@ -260,9 +254,9 @@ class TSPlusAPI {
   // Método para monitor de sesión
   static async sessionMonitor() {
     try {
-      const response = await axios.put(`${BASE_URL}/session_monitor/`);
+      const response = await api.put(`/session_monitor/`);
       return response.data;
-    } catch (error) {
+    } catch (error: any) {
       throw new Error(`Error en monitor de sesión: ${error.message}`);
     }
   }
@@ -270,9 +264,9 @@ class TSPlusAPI {
   // Método para gestor de sesión
   static async sessionManager() {
     try {
-      const response = await axios.put(`${BASE_URL}/session_manager/`);
+      const response = await api.put(`/session_manager/`);
       return response.data;
-    } catch (error) {
+    } catch (error: any) {
       throw new Error(`Error en gestor de sesión: ${error.message}`);
     }
   }
@@ -286,7 +280,7 @@ class TSPlusAPI {
     maximumCurrentSessions?: number // Corregido: ahora es opcional
   ) {
     try {
-      const response = await axios.post(`${BASE_URL}/web_credentials_add/`, {
+      const response = await api.post(`/web_credentials_add/`, {
         webLogin,
         webPassword,
         windowsLogin,
@@ -294,7 +288,7 @@ class TSPlusAPI {
         maximumCurrentSessions, // Se enviará 'undefined' si no se proporciona
       });
       return response.data;
-    } catch (error) {
+    } catch (error: any) {
       throw new Error(`Error al añadir credenciales web: ${error.message}`);
     }
   }
@@ -302,11 +296,11 @@ class TSPlusAPI {
   // Método para eliminar credenciales web
   static async removeWebCredentials(webLogin: string) {
     try {
-      const response = await axios.delete(
-        `${BASE_URL}/web_credentials_remove/?webLogin=${webLogin}`
+      const response = await api.delete(
+        `/web_credentials_remove/?webLogin=${webLogin}`
       );
       return response.data;
-    } catch (error) {
+    } catch (error: any) {
       throw new Error(`Error al eliminar credenciales web: ${error.message}`);
     }
   }
@@ -319,14 +313,14 @@ class TSPlusAPI {
     password?: string
   ) {
     try {
-      const response = await axios.post(`${BASE_URL}/proxy/`, {
+      const response = await api.post(`/proxy/`, {
         host,
         port,
         username,
         password,
       });
       return response.data;
-    } catch (error) {
+    } catch (error: any) {
       throw new Error(`Error al configurar proxy: ${error.message}`);
     }
   }
@@ -334,11 +328,9 @@ class TSPlusAPI {
   // Método para configurar servidor web
   static async configureWebServer(option: string) {
     try {
-      const response = await axios.post(
-        `${BASE_URL}/webserver/?option=${option}`
-      );
+      const response = await api.post(`/webserver/?option=${option}`);
       return response.data;
-    } catch (error) {
+    } catch (error: any) {
       throw new Error(`Error al configurar servidor web: ${error.message}`);
     }
   }
@@ -346,12 +338,12 @@ class TSPlusAPI {
   // Método para hacer backup de datos
   static async backupData(optionalPath?: string, silent: boolean = false) {
     try {
-      const response = await axios.post(`${BASE_URL}/backup_data/`, {
+      const response = await api.post(`/backup_data/`, {
         optionalPath, // Enviamos la ruta opcional
         silent, // Controlamos el modo silencioso
       });
       return response.data;
-    } catch (error) {
+    } catch (error: any) {
       throw new Error(`Error al hacer backup de datos: ${error.message}`);
     }
   }
@@ -359,12 +351,12 @@ class TSPlusAPI {
   // Método para restaurar datos
   static async restoreData(backupPath: string, silent: boolean = false) {
     try {
-      const response = await axios.put(`${BASE_URL}/restore_data/`, {
+      const response = await api.put(`/restore_data/`, {
         backupPath,
         silent,
       });
       return response.data;
-    } catch (error) {
+    } catch (error: any) {
       throw new Error(`Error al restaurar datos: ${error.message}`);
     }
   }
@@ -372,9 +364,9 @@ class TSPlusAPI {
   // Método para actualizar
   static async update() {
     try {
-      const response = await axios.put(`${BASE_URL}/update/`);
+      const response = await api.put(`/update/`);
       return response.data;
-    } catch (error) {
+    } catch (error: any) {
       throw new Error(`Error al actualizar: ${error.message}`);
     }
   }
@@ -382,9 +374,9 @@ class TSPlusAPI {
   // Método para compatibilidad con Windows
   static async windowsCompatibility() {
     try {
-      const response = await axios.put(`${BASE_URL}/windows_compatibility/`);
+      const response = await api.put(`/windows_compatibility/`);
       return response.data;
-    } catch (error) {
+    } catch (error: any) {
       throw new Error(`Error en compatibilidad con Windows: ${error.message}`);
     }
   }
@@ -392,9 +384,9 @@ class TSPlusAPI {
   // Método para instalar impresora
   static async installPrinter() {
     try {
-      const response = await axios.post(`${BASE_URL}/install_printer/`);
+      const response = await api.post(`/install_printer/`);
       return response.data;
-    } catch (error) {
+    } catch (error: any) {
       throw new Error(`Error al instalar impresora: ${error.message}`);
     }
   }
@@ -402,9 +394,9 @@ class TSPlusAPI {
   // Método para eliminar impresora
   static async removePrinter() {
     try {
-      const response = await axios.delete(`${BASE_URL}/remove_printer/`);
+      const response = await api.delete(`/remove_printer/`);
       return response.data;
-    } catch (error) {
+    } catch (error: any) {
       throw new Error(`Error al eliminar impresora: ${error.message}`);
     }
   }
