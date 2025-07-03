@@ -54,6 +54,13 @@ const AVAILABLE_COMMANDS: CommandDefinition[] = [
   //   method: TSPlusAPI.activate,
   // },
   {
+    id: "download_ts_plus",
+    name: "Descargar TS Plus",
+    description: "Comando para descargar TS Plus.",
+    params: [],
+    method: TSPlusAPI.downloadTSPlus,
+  },
+  {
     id: "install_volume_license_server",
     name: "Instalar Servidor de Licencias por Volumen",
     description:

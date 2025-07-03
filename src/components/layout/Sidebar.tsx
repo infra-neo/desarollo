@@ -24,8 +24,6 @@ const Sidebar = ({ isMobileOpen, setIsMobileOpen }: Props) => {
 
   const handleLogout = () => {
     logout();
-    navigate("/auth");
-    localStorage.clear();
   };
 
   const handleNavigate = (path: string) => {

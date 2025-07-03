@@ -13,6 +13,6 @@ export interface CommandDefinition {
     selectOptions?: Array<{ id: string; value: string }>;
     placeholder?: string;
   }>;
-  schema: z.ZodType<any>;
+  schema?: z.ZodType<any>;
   method: CommandMethod;
 }

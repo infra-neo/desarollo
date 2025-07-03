@@ -88,7 +88,11 @@ const ActionPanel = ({ server, onClose }: Props) => {
     }
   };
 
-  const isDisabled = isExecuting || !commandDefinition || !isValid || !isDirty;
+  const isDisabled =
+    isExecuting ||
+    !commandDefinition ||
+    // If the command has parameters, check validity and changes
+    (commandDefinition?.params.length > 0 && (!isValid || !isDirty));
 
   return (
     <>
