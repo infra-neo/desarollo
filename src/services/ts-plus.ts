@@ -36,7 +36,7 @@ class TSPlusAPI {
   ) {
     try {
       const response = await api.post(
-        `/install_tsplus/?license=${licenseKey}`,
+        `/commands/install_tsplus/?license=${licenseKey}`,
         {
           users,
           edition,
@@ -60,7 +60,7 @@ class TSPlusAPI {
   ) {
     try {
       const response = await api.put(
-        `/volume_en_dis/?license=${license}&option=${option}`
+        `/commands/volume_en_dis/?license=${license}&option=${option}`
       );
       return response.data;
     } catch (error: any) {
@@ -78,13 +78,16 @@ class TSPlusAPI {
     silent: boolean = false // Agregado: por defecto en false para feedback visual
   ) {
     try {
-      const response = await api.post(`/volume_act/?license=${license}`, {
-        users,
-        edition,
-        supportyears: supportYears,
-        comments, // Enviamos 'comments'
-        silent, // Enviamos 'silent'
-      });
+      const response = await api.post(
+        `/commands/volume_act/?license=${license}`,
+        {
+          users,
+          edition,
+          supportyears: supportYears,
+          comments, // Enviamos 'comments'
+          silent, // Enviamos 'silent'
+        }
+      );
       return response.data;
     } catch (error: any) {
       throw new Error(`Error al activar volumen: ${error.message}`);
@@ -95,7 +98,7 @@ class TSPlusAPI {
   static async updateVolume(license: string = DEFAULT_LICENSE, users: string) {
     try {
       const response = await api.put(
-        `/update_volume/?license=${license}&users=${users}`
+        `/commands/update_volume/?license=${license}&users=${users}`
       );
       return response.data;
     } catch (error: any) {
