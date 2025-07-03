@@ -1,4 +1,5 @@
 import type { GroupServer, Server } from "@/types/server.types";
+import api from "@/utils/api";
 
 const BASE_URL = "http://localhost:8000/servers";
 
@@ -45,26 +46,19 @@ const MOCK_SERVERS: Server[] = [
 ];
 
 class Servers {
-  static async getGroupServers(): Promise<GroupServer[]> {
-    try {
-      const response = (await simulateApiCall(
-        MOCKS_GROUP_SERVERS
-      )) as GroupServer[];
-      return response;
-    } catch (error) {
-      throw new Error(
-        `Error al obtener grupos de servidores: ${error.message}`
-      );
-    }
+  static async getGroupServers(empresaId: string): Promise<GroupServer[]> {
+    const response = await api.get<GroupServer[]>(
+      `/groups/?empresaId=${empresaId}`
+    );
+    return response.data;
   }
 
   static async getServers(groupServersGuid: string): Promise<Server[]> {
-    try {
-      const response = (await simulateApiCall(MOCK_SERVERS)) as Server[];
-      return response;
-    } catch (error) {
-      throw new Error(`Error al obtener servidores: ${error.message}`);
-    }
+    const response = await api.get<Server[]>(
+      `/servers/?group_guid=${groupServersGuid}`
+    );
+
+    return response.data;
   }
 }
 

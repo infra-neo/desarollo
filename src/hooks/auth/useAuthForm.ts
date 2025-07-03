@@ -1,4 +1,4 @@
-import useAuth from "./useAuth";
+import { useAuth } from "@/context/AuthContext";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";

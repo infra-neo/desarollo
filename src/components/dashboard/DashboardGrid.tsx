@@ -6,9 +6,13 @@ import ModalCreateServer from "./ModalCreateServer";
 import useServer from "@/hooks/useServer";
 import { useServerContext } from "@/context/ServerContext";
 
-const DashboardGrid = () => {
+interface Props {
+  groupServerGuid: string;
+}
+
+const DashboardGrid = ({ groupServerGuid }: Props) => {
   const { selectedServer, onServerSelect } = useServerContext();
-  const { servers, isLoading } = useServer("some-guid");
+  const { servers, isLoading } = useServer(groupServerGuid);
   const [searchTerm, setSearchTerm] = useState("");
 
   const selectedGuidServer = selectedServer?.guid;

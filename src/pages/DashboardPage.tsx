@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import DashboardLayout from "../components/layout/DashboardLayout";
 import ActionPanel from "../components/dashboard/ActionPanel";
 import ServerGroupCards from "../components/dashboard/ServerGroupCards";
-import useAuth from "@/hooks/auth/useAuth";
+import { useAuth } from "@/context/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
 import CreateServerGroupModal from "@/components/dashboard/ModalCreateGroup";
 import useServerGroup from "@/hooks/userServerGroup";
