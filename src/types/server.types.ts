@@ -1,3 +1,9 @@
+export interface RequestGroupServer {
+  nombre: string;
+  descripcion: string;
+  empresa_guid: string;
+}
+
 export interface GroupServer {
   nombre: string;
   descripcion: string;

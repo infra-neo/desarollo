@@ -1,4 +1,8 @@
-import type { GroupServer, Server } from "@/types/server.types";
+import type {
+  GroupServer,
+  RequestGroupServer,
+  Server,
+} from "@/types/server.types";
 import api from "@/utils/api";
 
 const BASE_URL = "http://localhost:8000/servers";
@@ -46,9 +50,15 @@ const MOCK_SERVERS: Server[] = [
 ];
 
 class Servers {
-  static async getGroupServers(empresaId: string): Promise<GroupServer[]> {
+  static async createGroupServer(
+    createGroupServer: RequestGroupServer
+  ): Promise<void> {
+    await api.post(`/groups`, createGroupServer);
+  }
+
+  static async getGroupServers(enterpriseId: string): Promise<GroupServer[]> {
     const response = await api.get<GroupServer[]>(
-      `/groups/?empresaId=${empresaId}`
+      `/groups/?empresaId=${enterpriseId}`
     );
     return response.data;
   }
