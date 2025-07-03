@@ -37,7 +37,7 @@ const CommandParamsForm = ({
           {/* // * We could use this later */}
           {/* <h3>{commandDefinition.name}</h3> */}
           {commandDefinition.params.map((param) => (
-            <div key={param.id}>
+            <div key={param.id} className="space-y-2">
               <Label htmlFor={`param-${param.id}`}>{param.name}</Label>
               {param.selectOptions ? (
                 <Controller
