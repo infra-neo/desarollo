@@ -76,6 +76,10 @@ class Servers {
     await api.post(`/servers`, server);
   }
 
+  static async removeServer(serverGuid: string): Promise<void> {
+    await api.delete(`/servers/?guid=${serverGuid}`);
+  }
+
   static async removeGroupServer(groupServerGuid: string): Promise<void> {
     await api.delete(`/groups/?guid=${groupServerGuid}`);
   }

@@ -210,40 +210,41 @@ const AuthPage = () => {
               </motion.div>
             </motion.div>
 
-            <motion.div
-              className="text-center"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.7, duration: 0.5 }}
-            >
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+            {/* // * We'll use this later */}
+            {/* <motion.div
+                className="text-center"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.7, duration: 0.5 }}
               >
-                <Button
-                  type="button"
-                  variant="ghost"
-                  onClick={() => {
-                    toogleLogin();
-                  }}
-                  className="text-sm text-gray-600 transition-colors hover:text-blue-600"
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                 >
-                  <AnimatePresence mode="wait">
-                    <motion.span
-                      key={isLogin ? "register-link" : "login-link"}
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      transition={{ duration: 0.2 }}
-                    >
-                      {isLogin
-                        ? "¿No tienes cuenta? Regístrate"
-                        : "¿Ya tienes cuenta? Inicia sesión"}
-                    </motion.span>
-                  </AnimatePresence>
-                </Button>
-              </motion.div>
-            </motion.div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={() => {
+                      toogleLogin();
+                    }}
+                    className="text-sm text-gray-600 transition-colors hover:text-blue-600"
+                  >
+                    <AnimatePresence mode="wait">
+                      <motion.span
+                        key={isLogin ? "register-link" : "login-link"}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        {isLogin
+                          ? "¿No tienes cuenta? Regístrate"
+                          : "¿Ya tienes cuenta? Inicia sesión"}
+                      </motion.span>
+                    </AnimatePresence>
+                  </Button>
+                </motion.div>
+              </motion.div> */}
           </CardContent>
         </Card>
       </motion.form>

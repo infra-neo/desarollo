@@ -69,7 +69,7 @@ const DashboardGrid = ({ groupServerGuid, groupName }: Props) => {
             setOpen={setOpenConfirmModal}
             onConfirm={removeGroupServer}
             itemName={groupName}
-            itemType="server"
+            itemType="group"
           />
         </div>
       </div>
@@ -79,7 +79,7 @@ const DashboardGrid = ({ groupServerGuid, groupName }: Props) => {
           <p className="text-gray-500">No se encontraron servidores</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {filteredServers.map((server, index) => (
             <motion.div
               key={server.guid}

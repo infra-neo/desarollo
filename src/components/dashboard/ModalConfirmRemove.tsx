@@ -31,6 +31,7 @@ interface ModalConfirmRemoveProps {
   onConfirm: () => Promise<void>;
   itemName: string;
   itemType: "server" | "group";
+  dialogTrigger?: boolean;
 }
 
 const ModalConfirmRemove = ({
@@ -39,6 +40,7 @@ const ModalConfirmRemove = ({
   onConfirm,
   itemName,
   itemType,
+  dialogTrigger = true,
 }: ModalConfirmRemoveProps) => {
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -88,11 +90,13 @@ const ModalConfirmRemove = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="ghost" className="hover:text-red-600">
-          <Trash2 style={{ width: "20px", height: "20px" }} />
-        </Button>
-      </DialogTrigger>
+      {dialogTrigger && (
+        <DialogTrigger asChild>
+          <Button variant="ghost" className="hover:text-red-600">
+            <Trash2 style={{ width: "20px", height: "20px" }} />
+          </Button>
+        </DialogTrigger>
+      )}
       <DialogContent className="sm:max-w-[500px] p-10">
         <DialogHeader>
           <DialogTitle className="flex gap-2 items-center text-destructive">
