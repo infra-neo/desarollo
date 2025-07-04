@@ -1,19 +1,24 @@
 import { useState } from "react";
-import { Grid, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import ServerCard from "./ServerCard";
 import { motion } from "framer-motion";
 import ModalCreateServer from "./ModalCreateServer";
 import useServer from "@/hooks/useServer";
 import { useServerContext } from "@/context/ServerContext";
+import ModalConfirmRemove from "./ModalConfirmRemove";
+import useRemoveServerGroup from "@/hooks/useRemoveServerGroup";
 
 interface Props {
   groupServerGuid: string;
+  groupName: string;
 }
 
-const DashboardGrid = ({ groupServerGuid }: Props) => {
+const DashboardGrid = ({ groupServerGuid, groupName }: Props) => {
+  const [searchTerm, setSearchTerm] = useState("");
   const { selectedServer, onServerSelect } = useServerContext();
   const { servers, isLoading } = useServer(groupServerGuid);
-  const [searchTerm, setSearchTerm] = useState("");
+  const { removeGroupServer, isOpenConfirmRemove, setOpenConfirmModal } =
+    useRemoveServerGroup(groupServerGuid);
 
   const selectedGuidServer = selectedServer?.guid;
 
@@ -59,9 +64,13 @@ const DashboardGrid = ({ groupServerGuid }: Props) => {
               />
             </svg>
           </div>
-          <button className="flex justify-center items-center p-2 text-gray-500 bg-gray-100 rounded-lg hover:bg-gray-200">
-            <Grid className="w-5 h-5" />
-          </button>
+          <ModalConfirmRemove
+            isOpen={isOpenConfirmRemove}
+            setOpen={setOpenConfirmModal}
+            onConfirm={removeGroupServer}
+            itemName={groupName}
+            itemType="server"
+          />
         </div>
       </div>
 
