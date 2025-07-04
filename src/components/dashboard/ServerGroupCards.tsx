@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { servers, type Server } from "../../data/servers";
 import { motion, AnimatePresence } from "framer-motion";
 import DashboardGrid from "./DashboardGrid";
 import { Button } from "@/components/ui/button";

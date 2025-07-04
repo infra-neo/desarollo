@@ -2,10 +2,14 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { serverSchema, type ServerFormData } from "@/schemas/serverFormsSchema";
+import Servers from "@/services/servers";
+import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 
 const useCreateServer = () => {
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const queryClient = useQueryClient();
 
   const form = useForm<ServerFormData>({
     resolver: zodResolver(serverSchema),
@@ -17,21 +21,26 @@ const useCreateServer = () => {
     },
   });
 
-  const onSubmit = async (data: ServerFormData) => {
+  const onSubmit = async (data: ServerFormData, groupGuid: string) => {
     setIsLoading(true);
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      await Servers.createServer({
+        ...data,
+        grupo_guid: groupGuid,
+      });
 
-      console.log("Datos del servidor:", data);
+      queryClient.invalidateQueries({
+        queryKey: ["servers", groupGuid],
+      });
 
       setOpen(false);
       form.reset();
 
-      alert("¡Servidor creado exitosamente!");
+      toast.success("Servidor creado exitosamente!");
     } catch (error) {
       console.error("Error al crear servidor:", error);
-      alert("Error al crear el servidor");
+      toast.error("Error al crear el servidor");
     } finally {
       setIsLoading(false);
     }

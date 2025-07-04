@@ -35,7 +35,7 @@ const DashboardGrid = ({ groupServerGuid }: Props) => {
         <h2 className="text-xl font-bold text-gray-900">Servidores</h2>
 
         <div className="flex gap-3 items-center">
-          <ModalCreateServer />
+          <ModalCreateServer groupGuid={groupServerGuid} />
           <div className="relative">
             <input
               type="text"

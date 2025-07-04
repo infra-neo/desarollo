@@ -1,6 +1,7 @@
 import type {
   GroupServer,
   RequestGroupServer,
+  RequestServer,
   Server,
 } from "@/types/server.types";
 import api from "@/utils/api";
@@ -69,6 +70,10 @@ class Servers {
     );
 
     return response.data;
+  }
+
+  static async createServer(server: RequestServer): Promise<void> {
+    await api.post(`/servers`, server);
   }
 }
 

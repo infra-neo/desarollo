@@ -22,7 +22,11 @@ import { Button } from "@/components/ui/button";
 import { Plus, Server, Loader2, Globe, Link } from "lucide-react";
 import useCreateServer from "@/hooks/useCreateServer";
 
-const ModalCreateServer = () => {
+interface Props {
+  groupGuid: string;
+}
+
+const ModalCreateServer = ({ groupGuid }: Props) => {
   const { open, setOpen, isLoading, form, onSubmit, handleCancel } =
     useCreateServer();
 
@@ -153,7 +157,7 @@ const ModalCreateServer = () => {
                 Cancelar
               </Button>
               <Button
-                onClick={form.handleSubmit(onSubmit)}
+                onClick={form.handleSubmit((data) => onSubmit(data, groupGuid))}
                 disabled={isLoading}
                 className="gap-2"
               >

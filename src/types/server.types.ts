@@ -19,3 +19,11 @@ export interface Server {
   grupo_guid: string;
   guid: string;
 }
+
+export interface RequestServer {
+  ip: string;
+  tunel: string;
+  nombre: string;
+  descripcion: string;
+  grupo_guid: string;
+}
