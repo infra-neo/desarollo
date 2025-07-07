@@ -1,6 +1,6 @@
 import { useNavigate, useLocation } from "react-router";
 import { Button } from "../ui/button";
-import { Home, LogOut, Server, X } from "lucide-react";
+import { Activity, LogOut, X } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import Logo from "@/assets/logo/Logo_horizontal.png";
 
@@ -15,8 +15,7 @@ const Sidebar = ({ isMobileOpen, setIsMobileOpen }: Props) => {
   const currentPath = useLocation().pathname;
 
   const menuItems = [
-    { icon: Home, label: "Inicio", path: "/dashboard", count: null },
-    { icon: Server, label: "Servidores", path: "/servers", count: 8 },
+    { icon: Activity, label: "Servidores", path: "/dashboard", count: null },
     // { icon: Activity, label: "Monitoreo", path: "/monitoring", count: null },
     // { icon: Users, label: "Usuarios", path: "/users", count: null },
     // { icon: Settings, label: "Configuración", path: "/settings", count: null },
