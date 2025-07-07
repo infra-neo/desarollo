@@ -1,4 +1,10 @@
-import type { GroupServer, Server } from "@/types/server.types";
+import type {
+  GroupServer,
+  RequestGroupServer,
+  RequestServer,
+  Server,
+} from "@/types/server.types";
+import api from "@/utils/api";
 
 const BASE_URL = "http://localhost:8000/servers";
 
@@ -45,26 +51,37 @@ const MOCK_SERVERS: Server[] = [
 ];
 
 class Servers {
-  static async getGroupServers(): Promise<GroupServer[]> {
-    try {
-      const response = (await simulateApiCall(
-        MOCKS_GROUP_SERVERS
-      )) as GroupServer[];
-      return response;
-    } catch (error) {
-      throw new Error(
-        `Error al obtener grupos de servidores: ${error.message}`
-      );
-    }
+  static async createGroupServer(
+    createGroupServer: RequestGroupServer
+  ): Promise<void> {
+    await api.post(`/groups`, createGroupServer);
+  }
+
+  static async getGroupServers(enterpriseId: string): Promise<GroupServer[]> {
+    const response = await api.get<GroupServer[]>(
+      `/groups/?empresaId=${enterpriseId}`
+    );
+    return response.data;
   }
 
   static async getServers(groupServersGuid: string): Promise<Server[]> {
-    try {
-      const response = (await simulateApiCall(MOCK_SERVERS)) as Server[];
-      return response;
-    } catch (error) {
-      throw new Error(`Error al obtener servidores: ${error.message}`);
-    }
+    const response = await api.get<Server[]>(
+      `/servers/?group_guid=${groupServersGuid}`
+    );
+
+    return response.data;
+  }
+
+  static async createServer(server: RequestServer): Promise<void> {
+    await api.post(`/servers`, server);
+  }
+
+  static async removeServer(serverGuid: string): Promise<void> {
+    await api.delete(`/servers/?guid=${serverGuid}`);
+  }
+
+  static async removeGroupServer(groupServerGuid: string): Promise<void> {
+    await api.delete(`/groups/?guid=${groupServerGuid}`);
   }
 }
 

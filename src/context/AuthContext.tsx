@@ -2,14 +2,15 @@ import { ADMIN_EMAIL } from "@/constants/adminCredential";
 import useLocalStorage from "@/hooks/useLocalStorage";
 import Auth from "@/services/auth";
 import User from "@/services/user";
+import type { User as UserType } from "@/types/user.types";
 import { AUTH_EVENTS } from "@/utils/api";
 import type { LoginFormData } from "@/utils/validations";
-import React, { createContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { toast } from "sonner";
 
 type AuthContextType = {
-  user: User | null;
+  user: UserType | null;
   isAuthenticated: boolean;
   login: (userData: LoginFormData) => Promise<void>;
   logout: () => void;
@@ -24,14 +25,8 @@ const AuthContext = createContext<AuthContextType>({
   loading: false,
 });
 
-const MOCK_USER = {
-  id: 1,
-  email: ADMIN_EMAIL,
-  name: "admin",
-};
-
 const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [user, setUser] = useLocalStorage<User | null>("user", MOCK_USER);
+  const [user, setUser] = useLocalStorage<UserType | null>("user", null);
   const [isAuthenticated, setIsAuthenticated] = useLocalStorage<boolean>(
     "isAuthenticated",
     false
@@ -130,4 +125,15 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
-export { AuthContext, AuthProvider };
+const useAuth = () => {
+  const context = useContext(AuthContext);
+
+  if (!context) {
+    throw new Error("useAuth must be used within an AuthProvider");
+  }
+
+  return context;
+};
+
+// eslint-disable-next-line react-refresh/only-export-components
+export { AuthContext, AuthProvider, useAuth };

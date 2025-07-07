@@ -1,7 +1,7 @@
 import { useNavigate, useLocation } from "react-router";
 import { Button } from "../ui/button";
 import { Home, LogOut, Server, X } from "lucide-react";
-import useAuth from "@/hooks/auth/useAuth";
+import { useAuth } from "@/context/AuthContext";
 import Logo from "@/assets/logo/Logo_horizontal.png";
 
 interface Props {

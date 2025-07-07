@@ -5,10 +5,16 @@ import {
   serverGroupSchema,
   type ServerGroupFormData,
 } from "@/schemas/serverFormsSchema";
+import Servers from "@/services/servers";
+import { useAuth } from "@/context/AuthContext";
+import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 
 const useCreateServerGroup = () => {
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
 
   const form = useForm<ServerGroupFormData>({
     resolver: zodResolver(serverGroupSchema),
@@ -19,20 +25,27 @@ const useCreateServerGroup = () => {
   });
 
   const onSubmit = async (data: ServerGroupFormData) => {
+    if (!user) return;
+
     setIsLoading(true);
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      await Servers.createGroupServer({
+        ...data,
+        empresa_guid: user.enterpriseGuid,
+      });
 
-      console.log("Datos del grupo de servidores:", data);
+      queryClient.invalidateQueries({
+        queryKey: ["server-group"],
+      });
 
       setOpen(false);
       form.reset();
 
-      alert("¡Grupo de servidores creado exitosamente!");
+      toast.success("Grupo de servidores creado exitosamente!");
     } catch (error) {
       console.error("Error al crear grupo de servidores:", error);
-      alert("Error al crear el grupo de servidores");
+      toast.error("Error al crear el grupo de servidores");
     } finally {
       setIsLoading(false);
     }

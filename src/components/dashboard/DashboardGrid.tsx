@@ -1,15 +1,24 @@
 import { useState } from "react";
-import { Grid, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import ServerCard from "./ServerCard";
 import { motion } from "framer-motion";
 import ModalCreateServer from "./ModalCreateServer";
 import useServer from "@/hooks/useServer";
 import { useServerContext } from "@/context/ServerContext";
+import ModalConfirmRemove from "./ModalConfirmRemove";
+import useRemoveServerGroup from "@/hooks/useRemoveServerGroup";
 
-const DashboardGrid = () => {
-  const { selectedServer, onServerSelect } = useServerContext();
-  const { servers, isLoading } = useServer("some-guid");
+interface Props {
+  groupServerGuid: string;
+  groupName: string;
+}
+
+const DashboardGrid = ({ groupServerGuid, groupName }: Props) => {
   const [searchTerm, setSearchTerm] = useState("");
+  const { selectedServer, onServerSelect } = useServerContext();
+  const { servers, isLoading } = useServer(groupServerGuid);
+  const { removeGroupServer, isOpenConfirmRemove, setOpenConfirmModal } =
+    useRemoveServerGroup(groupServerGuid);
 
   const selectedGuidServer = selectedServer?.guid;
 
@@ -31,7 +40,7 @@ const DashboardGrid = () => {
         <h2 className="text-xl font-bold text-gray-900">Servidores</h2>
 
         <div className="flex gap-3 items-center">
-          <ModalCreateServer />
+          <ModalCreateServer groupGuid={groupServerGuid} />
           <div className="relative">
             <input
               type="text"
@@ -55,9 +64,13 @@ const DashboardGrid = () => {
               />
             </svg>
           </div>
-          <button className="flex justify-center items-center p-2 text-gray-500 bg-gray-100 rounded-lg hover:bg-gray-200">
-            <Grid className="w-5 h-5" />
-          </button>
+          <ModalConfirmRemove
+            isOpen={isOpenConfirmRemove}
+            setOpen={setOpenConfirmModal}
+            onConfirm={removeGroupServer}
+            itemName={groupName}
+            itemType="group"
+          />
         </div>
       </div>
 
@@ -66,7 +79,7 @@ const DashboardGrid = () => {
           <p className="text-gray-500">No se encontraron servidores</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {filteredServers.map((server, index) => (
             <motion.div
               key={server.guid}

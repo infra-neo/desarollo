@@ -6,5 +6,6 @@ export const formatUser = (user: UserDataReponse): User => {
     id: user.guid,
     email: user.correo,
     name: user.nombre,
+    enterpriseGuid: user.empresa_guid,
   };
 };

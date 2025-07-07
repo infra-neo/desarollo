@@ -6,10 +6,12 @@ export interface UserDataReponse {
   telefono: string | null;
   foto: string | null;
   guid: string;
+  empresa_guid: string;
 }
 
 export interface User {
   id: string | number;
   email: string;
   name: string;
+  enterpriseGuid: string;
 }
