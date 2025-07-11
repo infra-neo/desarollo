@@ -80,6 +80,7 @@ const ActionPanel = ({ server, onClose }: Props) => {
       const response = await (commandDefinition.method as CommandMethod)(
         ...paramArgs
       );
+      reset();
       // console.log(response);
     } catch (error) {
       console.log(error);
