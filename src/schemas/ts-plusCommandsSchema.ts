@@ -42,7 +42,7 @@ export const volumeActivationSchema = z.object({
     .max(10, "Los años de soporte no deben ser mayor a 10"),
 });
 
-export const volumeDisableSchema = z.object({
+export const volumeEnableDisableSchema = z.object({
   license: z
     .string({ required_error: "El campo es requerido" })
     .min(1, "La licencia es requerida")

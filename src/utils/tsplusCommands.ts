@@ -2,9 +2,8 @@ import TSPlusAPI from "@/services/ts-plus";
 import type { CommandDefinition } from "@/types/command.types";
 import {
   volumeActivationSchema,
-  volumeDisableSchema,
+  volumeEnableDisableSchema,
   volumeInstallSchema,
-  volumeUpdateSchema,
 } from "@/schemas/ts-plusCommandsSchema";
 
 const AVAILABLE_COMMANDS: CommandDefinition[] = [
@@ -127,27 +126,9 @@ const AVAILABLE_COMMANDS: CommandDefinition[] = [
         type: "text",
         placeholder: "XXXXX-XXXXX-XXXXX-XXXXX-XXXXX",
       },
-      { id: "users", name: "Usuarios", type: "number", placeholder: "10" },
-      {
-        id: "edition",
-        name: "Edición",
-        type: "select",
-        selectOptions: [
-          { id: "Enterprise", value: "Enterprise" },
-          { id: "Standard", value: "Standard" },
-          { id: "Advanced", value: "Advanced" },
-        ],
-        placeholder: "Enterprise",
-      },
-      {
-        id: "supportYears",
-        name: "Años de Soporte",
-        type: "number",
-        placeholder: "1",
-      },
     ],
-    schema: volumeActivationSchema,
-    method: TSPlusAPI.volumeActivate,
+    schema: volumeEnableDisableSchema,
+    method: TSPlusAPI.volumeEnable,
   },
   {
     id: "volume_en_dis",
@@ -161,7 +142,7 @@ const AVAILABLE_COMMANDS: CommandDefinition[] = [
         placeholder: "XXXXX-XXXXX-XXXXX-XXXXX-XXXXX",
       },
     ],
-    schema: volumeDisableSchema,
+    schema: volumeEnableDisableSchema,
     method: TSPlusAPI.volumeDisable,
   },
   // {
