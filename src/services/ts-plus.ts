@@ -68,29 +68,32 @@ class TSPlusAPI {
     }
   }
 
-  // Método para activar licencias de volumen
-  static async volumeActivate(
+  static async volumeEnable(
     license: string = DEFAULT_LICENSE,
-    users: number,
-    edition: string,
-    supportYears: number,
-    comments?: string, // Agregado: opcional, puede ser undefined
-    silent: boolean = false // Agregado: por defecto en false para feedback visual
+    option = "enable"
   ) {
     try {
-      const response = await api.post(
-        `/commands/volume_act/?license=${license}`,
-        {
-          users,
-          edition,
-          supportyears: supportYears,
-          comments, // Enviamos 'comments'
-          silent, // Enviamos 'silent'
-        }
+      const response = await api.put(
+        `/commands/volume_en_dis/?license=${license}&option=${option}`
       );
       return response.data;
     } catch (error: any) {
-      throw new Error(`Error al activar volumen: ${error.message}`);
+      throw new Error(`Error al procesar volumen: ${error.message}`);
+    }
+  }
+
+  // Método para activar licencias de volumen
+  static async volumeActivate(
+    license: string = DEFAULT_LICENSE,
+    option = "activate"
+  ) {
+    try {
+      const response = await api.put(
+        `/commands/volume_en_dis/?license=${license}&option=${option}`
+      );
+      return response.data;
+    } catch (error: any) {
+      throw new Error(`Error al procesar volumen: ${error.message}`);
     }
   }
 
