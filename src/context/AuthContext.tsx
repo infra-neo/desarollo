@@ -4,7 +4,8 @@ import Auth from "@/services/auth";
 import User from "@/services/user";
 import type { User as UserType } from "@/types/user.types";
 import { AUTH_EVENTS } from "@/utils/api";
-import type { LoginFormData } from "@/utils/validations";
+import type { LoginFormData, RegisterFormData } from "@/utils/validations";
+import { findLocalUser } from "@/data/users";
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { toast } from "sonner";
@@ -13,6 +14,7 @@ type AuthContextType = {
   user: UserType | null;
   isAuthenticated: boolean;
   login: (userData: LoginFormData) => Promise<void>;
+  register: (userData: RegisterFormData) => Promise<void>;
   logout: () => void;
   loading: boolean;
 };
@@ -21,6 +23,7 @@ const AuthContext = createContext<AuthContextType>({
   user: null,
   isAuthenticated: false,
   login: () => Promise.resolve(),
+  register: () => Promise.resolve(),
   logout: () => {},
   loading: false,
 });
@@ -45,14 +48,60 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     try {
       await Auth.login(userData.email, userData.password);
-      const responseGetUser = await User.getUserData();
-      setUser(responseGetUser);
-      setIsAuthenticated(true);
+      
+      // Try to get user from API first
+      try {
+        const responseGetUser = await User.getUserData();
+        setUser(responseGetUser);
+        setIsAuthenticated(true);
+      } catch (apiError) {
+        // If API fails, check for local user
+        const localUser = findLocalUser(userData.email, userData.password);
+        if (localUser) {
+          const localUserData: UserType = {
+            id: localUser.id,
+            email: localUser.email,
+            name: localUser.name,
+            enterpriseGuid: localUser.enterpriseGuid || "",
+          };
+          setUser(localUserData);
+          setIsAuthenticated(true);
+        } else {
+          throw apiError;
+        }
+      }
     } catch (error) {
       console.error("Error in login:", error);
       toast.error(
         "Credenciales incorrectas. Verifica que el usuario y contraseña sean correctas"
       );
+      resetAuthState();
+    }
+  };
+
+  const register = async (userData: RegisterFormData) => {
+    if (!userData) return;
+
+    try {
+      await Auth.register(userData.name, userData.email, userData.password);
+      
+      // After successful registration, log the user in
+      const localUser = findLocalUser(userData.email, userData.password);
+      if (localUser) {
+        const localUserData: UserType = {
+          id: localUser.id,
+          email: localUser.email,
+          name: localUser.name,
+          enterpriseGuid: localUser.enterpriseGuid || "",
+        };
+        setUser(localUserData);
+        setIsAuthenticated(true);
+        toast.success("Usuario registrado exitosamente");
+      }
+    } catch (error) {
+      console.error("Error in register:", error);
+      const errorMessage = error instanceof Error ? error.message : "Error al registrar usuario";
+      toast.error(errorMessage);
       resetAuthState();
     }
   };
@@ -116,6 +165,7 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         user,
         isAuthenticated,
         login,
+        register,
         logout,
         loading,
       }}

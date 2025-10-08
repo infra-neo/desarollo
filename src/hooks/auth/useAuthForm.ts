@@ -10,7 +10,7 @@ import {
 } from "@/utils/validations";
 
 const useAuthForm = () => {
-  const { login } = useAuth();
+  const { login, register: registerUser } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
 
   const {
@@ -25,7 +25,11 @@ const useAuthForm = () => {
   });
 
   const onSubmit = (data: LoginFormData | RegisterFormData) => {
-    login(data);
+    if (isLogin) {
+      login(data as LoginFormData);
+    } else {
+      registerUser(data as RegisterFormData);
+    }
   };
 
   const toogleLogin = () => {
