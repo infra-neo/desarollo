@@ -1,13 +1,36 @@
 import type { CheckAuthResponse } from "@/types/auth.types";
+import { addLocalUser, findLocalUser } from "@/data/users";
 import api from "../utils/api";
 
 class Auth {
   static async login(email: string, password: string): Promise<void> {
-    const response = await api.post("/auth", {
-      correo: email,
-      contrasena: password,
+    // First, try to authenticate with the backend API
+    try {
+      const response = await api.post("/auth", {
+        correo: email,
+        contrasena: password,
+      });
+      return response.data;
+    } catch (error) {
+      // If API fails, check local users as fallback
+      const localUser = findLocalUser(email, password);
+      if (localUser) {
+        // Simulate successful API response for local users
+        return Promise.resolve();
+      }
+      // Re-throw the error if not found locally either
+      throw error;
+    }
+  }
+
+  static async register(name: string, email: string, password: string): Promise<void> {
+    // Add user to local storage
+    addLocalUser({
+      name,
+      email,
+      password,
     });
-    return response.data;
+    return Promise.resolve();
   }
 
   static async logout() {
