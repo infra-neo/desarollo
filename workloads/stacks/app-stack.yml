@@ -1,0 +1,78 @@
+version: '3.8'
+
+services:
+  app:
+    image: ${APP_IMAGE:-node:18-alpine}
+    deploy:
+      replicas: 2
+      update_config:
+        parallelism: 1
+        delay: 10s
+        failure_action: rollback
+        order: start-first
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.app.rule=Host(`app.example.com`)"
+        - "traefik.http.services.app.loadbalancer.server.port=5173"
+    environment:
+      - NODE_ENV=production
+      - PORT=5173
+    volumes:
+      - app-data:/app/data
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:5173"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  nginx:
+    image: nginx:alpine
+    deploy:
+      replicas: 1
+      update_config:
+        parallelism: 1
+        delay: 10s
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints:
+          - node.role == manager
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - nginx-config:/etc/nginx/conf.d:ro
+      - nginx-certs:/etc/nginx/certs:ro
+      - nginx-logs:/var/log/nginx
+    networks:
+      - app-network
+    depends_on:
+      - app
+
+networks:
+  app-network:
+    external: true
+
+volumes:
+  app-data:
+    driver: local
+  nginx-config:
+    driver: local
+  nginx-certs:
+    driver: local
+  nginx-logs:
+    driver: local

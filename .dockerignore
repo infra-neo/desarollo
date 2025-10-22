@@ -1,0 +1,61 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# CI/CD
+.github
+pipelines
+
+# Documentation
+*.md
+docs/
+diagrams/
+
+# Dependencies
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build artifacts (will be generated during build)
+dist
+build
+.cache
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Testing
+coverage
+.nyc_output
+*.test.js
+*.spec.js
+
+# Terraform
+terraform/
+*.tfstate
+*.tfvars
+
+# Workloads
+workloads/
+observability/
+
+# Temporary
+tmp/
+temp/
+*.tmp
+*.log
