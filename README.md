@@ -1,4 +1,67 @@
-### 1\. Visión General del Frontend
+# Desarollo - Full-Stack Application with DevOps Automation
+
+**Author: Ing. Benjamín Frías — DevOps & Cloud Specialist**
+
+---
+
+## Overview
+
+This project is a comprehensive full-stack application with automated DevOps infrastructure, featuring:
+- React TypeScript frontend
+- Terraform-based GCP infrastructure
+- Docker Swarm orchestration
+- Complete CI/CD pipelines
+- Observability stack (Loki, Promtail, Grafana)
+- Automated infrastructure diagrams
+
+---
+
+## Project Structure
+
+```
+desarollo/
+├── input/                    # Input configuration templates
+│   ├── docker-compose.yml    # Docker Swarm stack configuration
+│   ├── arch.yaml             # Architecture configuration
+│   └── prompt.md             # Deployment instructions
+├── terraform/                # Infrastructure as Code
+│   ├── main.tf               # Main Terraform configuration
+│   ├── variables.tf          # Terraform variables
+│   ├── outputs.tf            # Terraform outputs
+│   └── modules/              # Terraform modules
+│       ├── compute/          # GCP compute instance
+│       ├── network/          # VPC and networking
+│       └── firewall/         # Firewall rules
+├── workloads/                # Application workloads
+│   ├── docker-swarm/         # Docker Swarm scripts
+│   │   ├── init-swarm.sh     # Initialize Docker Swarm
+│   │   ├── deploy-stack.sh   # Deploy stack
+│   │   └── remove-stack.sh   # Remove stack
+│   └── stacks/               # Docker stack definitions
+│       ├── app-stack.yml     # Application stack
+│       └── observability-stack.yml  # Monitoring stack
+├── pipelines/                # CI/CD pipelines
+│   └── .github/workflows/    # GitHub Actions workflows
+├── diagrams/                 # Infrastructure diagrams
+│   ├── generate-diagrams.sh  # Diagram generation script
+│   └── output/               # Generated diagrams
+├── observability/            # Observability configurations
+│   ├── loki/                 # Loki log aggregation
+│   ├── promtail/             # Promtail log collection
+│   └── grafana/              # Grafana dashboards
+├── src/                      # React application source
+└── docs/                     # Documentation
+```
+
+---
+
+## Quick Start
+
+See [/docs/RUN.md](/docs/RUN.md) for detailed step-by-step execution instructions.
+
+---
+
+### 1\. Frontend Overview
 
 El frontend de la aplicación está desarrollado utilizando **React**, un popular framework de JavaScript para construir interfaces de usuario interactivas. Se emplean diversas librerías y herramientas modernas para asegurar una experiencia de usuario fluida y una arquitectura de código escalable.
 

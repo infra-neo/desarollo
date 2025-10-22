@@ -1,0 +1,131 @@
+name: Deploy Application
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'src/**'
+      - 'workloads/**'
+      - '.github/workflows/deploy.yml'
+  workflow_dispatch:
+
+env:
+  DOCKER_REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  build:
+    name: Build and Push Docker Image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.DOCKER_REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    name: Deploy to Docker Swarm
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Add SSH known hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -H ${{ secrets.VM_IP }} >> ~/.ssh/known_hosts
+
+      - name: Test SSH connection
+        run: |
+          ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.VM_IP }} "echo 'SSH connection successful'"
+
+      - name: Initialize Docker Swarm
+        run: |
+          ssh ubuntu@${{ secrets.VM_IP }} "bash /opt/desarollo/workloads/docker-swarm/init-swarm.sh || true"
+
+      - name: Copy deployment files
+        run: |
+          scp -r workloads ubuntu@${{ secrets.VM_IP }}:/opt/desarollo/
+          scp input/docker-compose.yml ubuntu@${{ secrets.VM_IP }}:/opt/desarollo/
+
+      - name: Deploy Application Stack
+        run: |
+          ssh ubuntu@${{ secrets.VM_IP }} "
+            export APP_IMAGE=${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+            cd /opt/desarollo
+            docker stack deploy -c docker-compose.yml desarollo
+          "
+
+      - name: Deploy Observability Stack
+        run: |
+          ssh ubuntu@${{ secrets.VM_IP }} "
+            cd /opt/desarollo
+            docker stack deploy -c workloads/stacks/observability-stack.yml monitoring
+          "
+
+      - name: Verify Deployment
+        run: |
+          ssh ubuntu@${{ secrets.VM_IP }} "
+            echo '=== Application Stack ==='
+            docker stack services desarollo
+            echo ''
+            echo '=== Monitoring Stack ==='
+            docker stack services monitoring
+            echo ''
+            echo '=== Node Status ==='
+            docker node ls
+          "
+
+      - name: Comment on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '🚀 Application deployed successfully!\n\nAccess your application at: `http://${{ secrets.VM_IP }}`\nGrafana dashboard: `http://${{ secrets.VM_IP }}:3000`\n\n**Author:** Ing. Benjamín Frías — DevOps & Cloud Specialist'
+            })
