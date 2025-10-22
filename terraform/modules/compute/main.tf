@@ -2,9 +2,9 @@ resource "google_compute_instance" "vm_instance" {
   name         = var.instance_name
   machine_type = var.machine_type
   zone         = var.zone
-  
+
   tags = var.tags
-  
+
   boot_disk {
     initialize_params {
       image = "ubuntu-os-cloud/ubuntu-2204-lts"
@@ -12,20 +12,20 @@ resource "google_compute_instance" "vm_instance" {
       type  = "pd-standard"
     }
   }
-  
+
   network_interface {
     network    = var.network_name
     subnetwork = var.subnet_name
-    
+
     access_config {
       nat_ip = var.static_ip
     }
   }
-  
+
   metadata = {
-    ssh-keys = var.ssh_public_key != "" ? "${var.ssh_user}:${var.ssh_public_key}" : ""
+    ssh-keys = nonsensitive(var.ssh_public_key) != "" ? "${var.ssh_user}:${nonsensitive(var.ssh_public_key)}" : ""
   }
-  
+
   metadata_startup_script = <<-EOF
     #!/bin/bash
     
@@ -54,7 +54,7 @@ resource "google_compute_instance" "vm_instance" {
     
     echo "VM setup completed" > /var/log/startup-script.log
   EOF
-  
+
   labels = {
     environment = var.environment
     managed_by  = "terraform"
