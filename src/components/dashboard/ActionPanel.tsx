@@ -77,7 +77,7 @@ const ActionPanel = ({ server, onClose }: Props) => {
         (param) => paramsValues[param.id]
       );
 
-      const response = await (commandDefinition.method as CommandMethod)(
+      await (commandDefinition.method as CommandMethod)(
         ...paramArgs
       );
       reset();

@@ -12,7 +12,7 @@ const useRemoveServer = (serverGuid: string, groupGuid: string) => {
       queryClient.invalidateQueries({
         queryKey: ["servers", groupGuid],
       });
-    } catch (error) {
+    } catch {
       console.error("Error al eliminar el servidor");
     }
   };

@@ -78,7 +78,7 @@ const ModalConfirmRemove = ({
       );
       form.reset();
       setOpen(false);
-    } catch (error) {
+    } catch {
       toast.error(
         `Error al eliminar ${itemType === "server" ? "servidor" : "grupo"}`
       );
