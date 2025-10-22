@@ -17,7 +17,7 @@ const useLocalStorage = <T>(
   useEffect(() => {
     try {
       window.localStorage.setItem(key, JSON.stringify(storedValue));
-    } catch (error) {
+    } catch {
       console.error("Error when set key");
     }
   }, [key, storedValue]);

@@ -1,7 +1,6 @@
 import TSPlusAPI from "@/services/ts-plus";
 import type { CommandDefinition } from "@/types/command.types";
 import {
-  volumeActivationSchema,
   volumeEnableDisableSchema,
   volumeInstallSchema,
 } from "@/schemas/ts-plusCommandsSchema";
