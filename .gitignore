@@ -40,7 +40,6 @@ override.tf.json
 terraform.rc
 
 # Docker
-*.dockerignore
 docker-compose.override.yml
 .docker/
 
