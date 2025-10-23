@@ -22,11 +22,13 @@ const DashboardGrid = ({ groupServerGuid, groupName }: Props) => {
 
   const selectedGuidServer = selectedServer?.guid;
 
-  const filteredServers = servers?.filter((server) =>
+  // Ensure servers is always an array before filtering
+  const safeServers = Array.isArray(servers) ? servers : [];
+  const filteredServers = safeServers.filter((server) =>
     server.nombre.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  if (isLoading || !servers || filteredServers === undefined) {
+  if (isLoading || !servers) {
     return (
       <div className="flex justify-center py-16">
         <Loader2 className="animate-spin" color="blue" size={40} />
