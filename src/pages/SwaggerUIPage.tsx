@@ -12,12 +12,13 @@ const SwaggerUIPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
 
   const filterEndpoints = (endpoints: any[]) => {
+    if (!Array.isArray(endpoints)) return [];
     if (!searchTerm) return endpoints;
     return endpoints.filter(
       (endpoint) =>
-        endpoint.summary.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        endpoint.path.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        endpoint.description?.toLowerCase().includes(searchTerm.toLowerCase())
+        endpoint?.summary?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        endpoint?.path?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        endpoint?.description?.toLowerCase().includes(searchTerm.toLowerCase())
     );
   };
 
