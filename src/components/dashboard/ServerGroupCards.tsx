@@ -26,6 +26,9 @@ const ServerGroupCards = ({ groups, isLoading }: ServerGroupCardsProps) => {
     );
   }
 
+  // Protegemos contra valores inesperados en `groups` (null, objeto, string, etc.)
+  const safeGroups = Array.isArray(groups) ? groups : [];
+
   return (
     <motion.div
       className="space-y-6"
@@ -33,7 +36,7 @@ const ServerGroupCards = ({ groups, isLoading }: ServerGroupCardsProps) => {
       animate="visible"
       variants={containerVariants}
     >
-      {groups.map((group) => (
+      {safeGroups.map((group) => (
         <motion.div
           key={group.guid}
           className="overflow-hidden bg-white rounded-lg shadow-md dark:bg-gray-800"
