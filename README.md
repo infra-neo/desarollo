@@ -61,6 +61,49 @@ See [/docs/RUN.md](/docs/RUN.md) for detailed step-by-step execution instruction
 
 ---
 
+## Recent Fixes and Improvements
+
+### Error Corrections (October 2025)
+
+**1. TypeError in DashboardGrid Component**
+- **Issue**: Calling `.filter()` on potentially undefined `servers` array causing runtime errors
+- **Fix**: Added safety check using `Array.isArray()` to ensure servers is always a valid array before filtering
+- **Location**: `src/components/dashboard/DashboardGrid.tsx`
+
+**2. Error Boundary Implementation**
+- **Issue**: Unhandled runtime errors could crash the entire application
+- **Fix**: Implemented a comprehensive ErrorBoundary component with user-friendly error messages
+- **Location**: `src/components/common/ErrorBoundary.tsx`
+- **Impact**: Application now gracefully handles errors and provides recovery options
+
+**3. SwaggerUIPage Filter Safety**
+- **Issue**: Potential runtime errors when filtering endpoints with null/undefined properties
+- **Fix**: Added null-safe checks using optional chaining in filter operations
+- **Location**: `src/pages/SwaggerUIPage.tsx`
+
+**4. Environment Configuration**
+- **Added**: `.env.example` file documenting required environment variables
+- **Variable**: `VITE_URL_API` for API base URL configuration
+- **Location**: `.env.example`
+
+**5. Favicon and Icon Handling**
+- **Issue**: 404 errors for missing favicon.ico and apple-touch-icon files
+- **Fix**: Added favicon.svg and nginx configuration to handle these requests gracefully
+- **Location**: `public/favicon.svg` and `nginx.conf`
+
+**6. Build and Linting**
+- All TypeScript compilation errors resolved
+- ESLint warnings reduced to only non-critical fast-refresh warnings
+- Production build tested and verified
+
+### Testing Status
+- ✅ Build: Successfully compiles with no errors
+- ✅ Linting: Passes with only minor warnings
+- ✅ TypeScript: All type errors resolved
+- ⚠️ Runtime Testing: Requires backend API for full testing
+
+---
+
 ### 1\. Frontend Overview
 
 El frontend de la aplicación está desarrollado utilizando **React**, un popular framework de JavaScript para construir interfaces de usuario interactivas. Se emplean diversas librerías y herramientas modernas para asegurar una experiencia de usuario fluida y una arquitectura de código escalable.
