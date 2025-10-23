@@ -26,7 +26,7 @@ const ServerGroupCards = ({ groups, isLoading }: ServerGroupCardsProps) => {
     );
   }
 
-  // Protegemos contra valores inesperados en `groups` (null, objeto, string, etc.)
+  // Protect against unexpected values in `groups` (null, object, string, etc.)
   const safeGroups = Array.isArray(groups) ? groups : [];
 
   return (

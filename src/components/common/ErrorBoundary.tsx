@@ -7,6 +7,7 @@ import { AlertTriangle } from "lucide-react";
 interface Props {
   children: ReactNode;
   fallback?: ReactNode;
+  onNavigateHome?: () => void;
 }
 
 interface State {
@@ -66,7 +67,13 @@ class ErrorBoundary extends Component<Props, State> {
                     Intentar de nuevo
                   </Button>
                   <Button
-                    onClick={() => window.location.href = "/"}
+                    onClick={() => {
+                      if (this.props.onNavigateHome) {
+                        this.props.onNavigateHome();
+                      } else {
+                        window.location.href = "/";
+                      }
+                    }}
                     variant="outline"
                   >
                     Ir al inicio
