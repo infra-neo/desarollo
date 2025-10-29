@@ -203,7 +203,7 @@ export default function CloudsPage() {
           {/* Quick Actions */}
           <div className="mt-8">
             <h2 className="text-xl font-semibold text-gray-900 mb-4">Quick Actions</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <Link to="/machine-registration">
                 <Card className="p-6 hover:shadow-lg transition-shadow cursor-pointer group">
                   <div className="flex items-center justify-between">
@@ -214,6 +214,23 @@ export default function CloudsPage() {
                       <div>
                         <h3 className="font-semibold text-gray-900">Register Machine</h3>
                         <p className="text-sm text-gray-600">Add on-premise machines to your infrastructure</p>
+                      </div>
+                    </div>
+                    <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-gray-900 transition-colors" />
+                  </div>
+                </Card>
+              </Link>
+              
+              <Link to="/registered-machines">
+                <Card className="p-6 hover:shadow-lg transition-shadow cursor-pointer group">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="p-3 bg-green-100 rounded-lg">
+                        <HardDrive className="w-6 h-6 text-green-600" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-gray-900">Registered Machines</h3>
+                        <p className="text-sm text-gray-600">View all machines connected via VPN</p>
                       </div>
                     </div>
                     <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-gray-900 transition-colors" />
