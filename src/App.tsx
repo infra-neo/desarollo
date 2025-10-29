@@ -11,6 +11,9 @@ import SwaggerUIPage from "./pages/SwaggerUIPage";
 import WorkspacePage from "./pages/WorkspacePage";
 import InstallationProgress from "./pages/InstallationProgress";
 import VMListPage from "./pages/VMListPage";
+import CloudsPage from "./pages/CloudsPage";
+import CloudVMsPage from "./pages/CloudVMsPage";
+import MachineRegistrationPage from "./pages/MachineRegistrationPage";
 import { Toaster } from "sonner";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import RedirectToDashboard from "./components/common/RedirectRoute";
@@ -102,6 +105,33 @@ function App() {
             element={
               <ProtectedRoute>
                 <VMListPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/clouds"
+            element={
+              <ProtectedRoute>
+                <CloudsPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/clouds/:cloudId/vms"
+            element={
+              <ProtectedRoute>
+                <CloudVMsPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/machine-registration"
+            element={
+              <ProtectedRoute>
+                <MachineRegistrationPage />
               </ProtectedRoute>
             }
           />
