@@ -23,14 +23,19 @@ class Auth {
     }
   }
 
-  static async register(name: string, email: string, password: string): Promise<void> {
-    // Add user to local storage
-    addLocalUser({
+  static async register(name: string, email: string, password: string): Promise<any> {
+    // Add user to local storage and generate an enterprise GUID so
+    // downstream flows (e.g. creating server groups) have a valid value.
+    const newUser = addLocalUser({
       name,
       email,
       password,
+      // generate a default enterprise guid for local users
+      enterpriseGuid: crypto.randomUUID(),
     });
-    return Promise.resolve();
+
+    // Return the created user so callers can use it if needed
+    return Promise.resolve(newUser);
   }
 
   static async logout() {

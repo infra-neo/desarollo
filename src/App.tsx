@@ -9,6 +9,8 @@ import UsersPage from "./pages/UsersPage";
 import SettingsPage from "./pages/SettingsPage";
 import SwaggerUIPage from "./pages/SwaggerUIPage";
 import WorkspacePage from "./pages/WorkspacePage";
+import InstallationProgress from "./pages/InstallationProgress";
+import VMListPage from "./pages/VMListPage";
 import { Toaster } from "sonner";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import RedirectToDashboard from "./components/common/RedirectRoute";
@@ -83,6 +85,23 @@ function App() {
             element={
               <ProtectedRoute>
                 <WorkspacePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/installation"
+            element={
+              <ProtectedRoute>
+                <InstallationProgress />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/vms"
+            element={
+              <ProtectedRoute>
+                <VMListPage />
               </ProtectedRoute>
             }
           />
