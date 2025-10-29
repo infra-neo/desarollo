@@ -233,7 +233,17 @@ Asegúrate de tener instalado [Node.js](https://nodejs.org/) (se recomienda la v
 
     *(**Nota:** Reemplaza `https://github.com/joeebw/neogenesys-client.git` con la URL real de tu repositorio y `<nombre_del_directorio_clonado>` con el nombre de la carpeta de tu proyecto.)*
 
-2.  **Instala las dependencias:**
+2.  **Configura las variables de entorno:**
+
+    Copia el archivo `.env.example` a `.env` y configura las variables necesarias:
+
+    ```bash
+    cp .env.example .env
+    ```
+
+    **Importante:** La variable `SCARF_ANALYTICS=false` está configurada para deshabilitar la recopilación de análisis del paquete `@scarf/scarf` (utilizado por `swagger-client`). Esto evita intentos de conexión a `scarf.sh` que pueden ser bloqueados por el firewall.
+
+3.  **Instala las dependencias:**
 
     ```bash
     npm install

@@ -13,6 +13,7 @@ on:
 env:
   DOCKER_REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
+  SCARF_ANALYTICS: false  # Disable analytics to prevent firewall blocks on scarf.sh
 
 jobs:
   build:

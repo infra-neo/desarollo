@@ -8,6 +8,9 @@ on:
       - 'terraform/**'
   workflow_dispatch:
 
+env:
+  SCARF_ANALYTICS: false  # Disable analytics to prevent firewall blocks on scarf.sh
+
 jobs:
   generate-diagrams:
     name: Generate Diagrams

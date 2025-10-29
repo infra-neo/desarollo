@@ -27,6 +27,7 @@ on:
 env:
   TF_VERSION: '1.6.0'
   TERRAMATE_VERSION: '0.4.0'
+  SCARF_ANALYTICS: false  # Disable analytics to prevent firewall blocks on scarf.sh
 
 jobs:
   terraform-plan:
