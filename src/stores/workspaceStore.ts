@@ -1,6 +1,10 @@
 import { create } from 'zustand';
 import type { Node, Edge, Connection } from 'reactflow';
 import { addEdge } from 'reactflow';
+import type { CloudConnection, CloudProvider } from '@/services/connectors/cloudConnector';
+import type { Application } from '@/services/applicationCatalog';
+
+export type WorkflowStep = 'connect' | 'infrastructure' | 'users' | 'applications' | 'network';
 
 export type BlockType = 
   | 'cloud' 
@@ -21,6 +25,7 @@ export interface BlockConfig {
   os?: string;
   ip?: string;
   gateway?: string;
+  sshKey?: string;
   
   // User Configuration
   username?: string;
@@ -33,14 +38,21 @@ export interface BlockConfig {
   protocol?: string;
   source?: string;
   destination?: string;
+  allowSSH?: boolean;
+  allowHTTP?: boolean;
+  allowHTTPS?: boolean;
   
   // Cloud Configuration
-  provider?: string;
+  provider?: CloudProvider;
   region?: string;
+  connected?: boolean;
   
   // Network Configuration
   subnet?: string;
   vlan?: string;
+  
+  // Application Configuration
+  applications?: Application[];
   
   // Common
   name: string;
@@ -56,6 +68,17 @@ export interface WorkspaceNode extends Node {
 }
 
 interface WorkspaceState {
+  // Workflow
+  currentStep: WorkflowStep;
+  setCurrentStep: (step: WorkflowStep) => void;
+  
+  // Cloud Connections
+  cloudConnections: CloudConnection[];
+  activeConnection: CloudConnection | null;
+  addCloudConnection: (connection: CloudConnection) => void;
+  setActiveConnection: (connection: CloudConnection | null) => void;
+  
+  // Nodes and Edges
   nodes: WorkspaceNode[];
   edges: Edge[];
   selectedNode: WorkspaceNode | null;
@@ -73,6 +96,22 @@ interface WorkspaceState {
 }
 
 export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
+  // Workflow state
+  currentStep: 'connect',
+  setCurrentStep: (step) => set({ currentStep: step }),
+  
+  // Cloud connections
+  cloudConnections: [],
+  activeConnection: null,
+  addCloudConnection: (connection) => {
+    set((state) => ({
+      cloudConnections: [...state.cloudConnections, connection],
+      activeConnection: connection,
+    }));
+  },
+  setActiveConnection: (connection) => set({ activeConnection: connection }),
+  
+  // Nodes and edges
   nodes: [],
   edges: [],
   selectedNode: null,
