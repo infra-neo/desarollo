@@ -131,7 +131,7 @@ function WorkspaceContent() {
   const handleGetPlan = async () => {
     try {
       const config = exportToJSON();
-      const response = await axios.post('/api/plan', config);
+      const response = await axios.post('http://localhost:8000/plan', config);
       setPlanData(response.data.plan || JSON.stringify(response.data, null, 2));
     } catch (error) {
       setPlanData(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -142,7 +142,7 @@ function WorkspaceContent() {
     try {
       setDeployStatus('Deploying...');
       const config = exportToJSON();
-      const response = await axios.post('/api/deploy', config);
+      const response = await axios.post('http://localhost:8000/deploy', config);
       setDeployStatus(`Success: ${JSON.stringify(response.data, null, 2)}`);
     } catch (error) {
       setDeployStatus(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
