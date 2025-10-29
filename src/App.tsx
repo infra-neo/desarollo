@@ -8,6 +8,7 @@ import MonitoringPage from "./pages/MonitoringPage";
 import UsersPage from "./pages/UsersPage";
 import SettingsPage from "./pages/SettingsPage";
 import SwaggerUIPage from "./pages/SwaggerUIPage";
+import WorkspacePage from "./pages/WorkspacePage";
 import { Toaster } from "sonner";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import RedirectToDashboard from "./components/common/RedirectRoute";
@@ -74,6 +75,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <SwaggerUIPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/workspace"
+            element={
+              <ProtectedRoute>
+                <WorkspacePage />
               </ProtectedRoute>
             }
           />
