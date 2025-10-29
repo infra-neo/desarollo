@@ -17,9 +17,18 @@
 3. **Set Environment Variables**
    Create a `.env` file in the project root:
    ```bash
+   # Development environment
    VITE_HEADSCALE_URL=http://localhost:8080
    VITE_HEADSCALE_API_KEY=your-test-api-key
    VITE_URL_API=http://localhost:3000
+   ```
+   
+   **⚠️ Security Note**: For production, always use HTTPS:
+   ```bash
+   # Production environment
+   VITE_HEADSCALE_URL=https://headscale.your-domain.com
+   VITE_HEADSCALE_API_KEY=your-production-api-key
+   VITE_URL_API=https://api.your-domain.com
    ```
 
 4. **Start Development Server**
@@ -137,6 +146,8 @@ See `docs/MULTICLOUD_ARCHITECTURE.md` for complete API specifications.
 
 ### Environment Variables (Production)
 
+**⚠️ Security Warning**: Never use HTTP in production. Always use HTTPS for all endpoints.
+
 ```bash
 # Frontend (.env.production)
 VITE_HEADSCALE_URL=https://headscale.your-domain.com
@@ -144,7 +155,7 @@ VITE_HEADSCALE_API_KEY=<production-api-key>
 VITE_URL_API=https://api.your-domain.com
 
 # Backend
-HEADSCALE_URL=http://headscale:8080
+HEADSCALE_URL=http://headscale:8080  # Internal network only
 HEADSCALE_API_KEY=<api-key>
 DATABASE_URL=postgresql://user:pass@localhost:5432/db
 ```
@@ -231,6 +242,8 @@ All pages include mock data for testing without a backend:
 - Deployment instructions
 
 ### Timeline Estimate for Remaining Work
+
+**⚠️ Disclaimer**: These are estimates and may vary based on team size, complexity, unforeseen challenges, and specific requirements.
 
 **Windows Client Development**: 2-3 weeks
 - Service implementation: 1 week

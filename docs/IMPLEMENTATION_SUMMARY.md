@@ -403,9 +403,11 @@ Ready to be replaced with real API calls when backend is available.
 
 ### Bundle Size
 
-Current production build:
+Current production build (as of 2025-10-29):
 - **Total**: 1,479.32 kB (428.09 kB gzipped)
 - **CSS**: 70.48 kB (12.58 kB gzipped)
+
+*Note: Bundle sizes may change as features are added. Run `npm run build` for current metrics.*
 
 ### Recommendations
 
