@@ -1,0 +1,146 @@
+{
+  "version": "1.0",
+  "description": "Sample infrastructure blueprint demonstrating the Spark UI Builder capabilities",
+  "timestamp": "2025-10-29T07:00:00.000Z",
+  "nodes": [
+    {
+      "id": "cloud-1",
+      "type": "custom",
+      "position": {
+        "x": 100,
+        "y": 50
+      },
+      "data": {
+        "label": "Cloud",
+        "type": "cloud",
+        "config": {
+          "name": "GCP Production",
+          "description": "Google Cloud Platform production environment",
+          "provider": "GCP",
+          "region": "us-central1"
+        }
+      }
+    },
+    {
+      "id": "network-1",
+      "type": "custom",
+      "position": {
+        "x": 100,
+        "y": 200
+      },
+      "data": {
+        "label": "Network",
+        "type": "network",
+        "config": {
+          "name": "Production Network",
+          "description": "Main production VPC",
+          "subnet": "10.0.0.0/16",
+          "vlan": "100"
+        }
+      }
+    },
+    {
+      "id": "vm-1",
+      "type": "custom",
+      "position": {
+        "x": 100,
+        "y": 350
+      },
+      "data": {
+        "label": "Virtual Machine",
+        "type": "vm",
+        "config": {
+          "name": "web-server-01",
+          "description": "Production web server",
+          "cpu": 4,
+          "ram": 16,
+          "disk": 100,
+          "os": "Ubuntu 22.04 LTS",
+          "ip": "10.0.1.10",
+          "gateway": "10.0.1.1"
+        }
+      }
+    },
+    {
+      "id": "app-1",
+      "type": "custom",
+      "position": {
+        "x": 100,
+        "y": 500
+      },
+      "data": {
+        "label": "Application",
+        "type": "app",
+        "config": {
+          "name": "nginx-webapp",
+          "description": "Nginx web application server"
+        }
+      }
+    },
+    {
+      "id": "firewall-1",
+      "type": "custom",
+      "position": {
+        "x": 400,
+        "y": 200
+      },
+      "data": {
+        "label": "Firewall",
+        "type": "firewall",
+        "config": {
+          "name": "Web Firewall",
+          "description": "Allow HTTP/HTTPS traffic",
+          "port": "80,443",
+          "protocol": "TCP",
+          "source": "0.0.0.0/0",
+          "destination": "10.0.1.10"
+        }
+      }
+    },
+    {
+      "id": "user-1",
+      "type": "custom",
+      "position": {
+        "x": 400,
+        "y": 350
+      },
+      "data": {
+        "label": "User",
+        "type": "user",
+        "config": {
+          "name": "admin-user",
+          "description": "System administrator",
+          "username": "admin",
+          "email": "admin@example.com",
+          "assignedRole": "administrator"
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "source": "cloud-1",
+      "target": "network-1",
+      "type": "default",
+      "id": "edge-cloud-network"
+    },
+    {
+      "source": "network-1",
+      "target": "vm-1",
+      "type": "default",
+      "id": "edge-network-vm"
+    },
+    {
+      "source": "vm-1",
+      "target": "app-1",
+      "type": "default",
+      "id": "edge-vm-app"
+    },
+    {
+      "source": "network-1",
+      "target": "firewall-1",
+      "type": "default",
+      "id": "edge-network-firewall"
+    }
+  ]
+}
