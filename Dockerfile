@@ -1,16 +1,15 @@
 # Multi-stage Dockerfile for React application
 # Author: Ing. Benjamín Frías — DevOps & Cloud Specialist
 
-# Stage 1: Build the application
-FROM node:20-alpine AS builder
+# Stage 1: Build the application  
+FROM node:20 AS builder
 
 WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies (including dev dependencies for build)
-# Note: Using npm install instead of npm ci due to environment compatibility
+# Install dependencies
 RUN npm install --legacy-peer-deps
 
 # Copy source code
