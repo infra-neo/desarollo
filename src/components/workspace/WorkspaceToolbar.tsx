@@ -1,4 +1,7 @@
 import { Button } from '@/components/ui/button';
+import Html5ConnectionModal from '@/components/Html5ConnectionModal';
+import { useNavigate } from 'react-router';
+import { useState } from 'react';
 import { useWorkspaceStore } from '@/stores/workspaceStore';
 import { 
   Download, 
@@ -12,6 +15,8 @@ import { toast } from 'sonner';
 
 export default function WorkspaceToolbar() {
   const { nodes, edges, exportBlueprint, validateWorkspace, setNodes, setEdges } = useWorkspaceStore();
+  const navigate = useNavigate();
+  const [htmlOpen, setHtmlOpen] = useState(false);
 
   const handleValidate = () => {
     const { isValid, errors } = validateWorkspace();
@@ -161,6 +166,31 @@ export default function WorkspaceToolbar() {
             <Play className="w-4 h-4 mr-2" />
             Deploy
           </Button>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate('/installation')}
+          >
+            Installation
+          </Button>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate('/vms')}
+          >
+            VMs
+          </Button>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setHtmlOpen(true)}
+          >
+            HTML5
+          </Button>
+          <Html5ConnectionModal open={htmlOpen} setOpen={setHtmlOpen} targetGuid={null} />
 
           <div className="w-px h-6 bg-gray-300 mx-2" />
 

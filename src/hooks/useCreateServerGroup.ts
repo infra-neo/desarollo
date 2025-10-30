@@ -44,8 +44,24 @@ const useCreateServerGroup = () => {
 
       toast.success("Grupo de servidores creado exitosamente!");
     } catch (error) {
-      console.error("Error al crear grupo de servidores:", error);
-      toast.error("Error al crear el grupo de servidores");
+        // Try to extract a useful message from the error (axios response or generic)
+        console.error("Error al crear grupo de servidores:", error);
+        let message = "Error al crear el grupo de servidores";
+
+        try {
+          const err: any = error;
+          if (err?.response?.data) {
+            // Prefer backend message if provided
+            message =
+              err.response.data.message || JSON.stringify(err.response.data);
+          } else if (err?.message) {
+            message = err.message;
+          }
+        } catch (e) {
+          // ignore extraction errors
+        }
+
+        toast.error(message);
     } finally {
       setIsLoading(false);
     }

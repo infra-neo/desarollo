@@ -126,7 +126,18 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     // Add event listener for auth failures
     window.addEventListener(AUTH_EVENTS.AUTH_FAILED, handleAuthFailure);
 
-    // Check authentication status on mount
+    // If we already have a user stored locally and marked as authenticated,
+    // avoid calling the remote check (useful for local/dev mode and offline
+    // testing). This prevents the app from clearing local auth state when the
+    // backend is not available.
+    if (user && isAuthenticated) {
+      setLoading(false);
+      return;
+    }
+
+    // Check authentication status on mount (remote). If the remote check
+    // fails, we'll fall back to local state (which at this point is empty) and
+    // keep the user logged out.
     const checkAuthentication = async () => {
       try {
         const authResponse = await Auth.checkAuth();
