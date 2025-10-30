@@ -15,6 +15,8 @@ import CloudsPage from "./pages/CloudsPage";
 import CloudVMsPage from "./pages/CloudVMsPage";
 import MachineRegistrationPage from "./pages/MachineRegistrationPage";
 import RegisteredMachinesPage from "./pages/RegisteredMachinesPage";
+import RemoteManagementPage from "./pages/RemoteManagementPage";
+import ConnectExistingMachinePage from "./pages/ConnectExistingMachinePage";
 import { Toaster } from "sonner";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import RedirectToDashboard from "./components/common/RedirectRoute";
@@ -142,6 +144,24 @@ function App() {
             element={
               <ProtectedRoute>
                 <RegisteredMachinesPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/remote"
+            element={
+              <ProtectedRoute>
+                <RemoteManagementPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/remote/connect"
+            element={
+              <ProtectedRoute>
+                <ConnectExistingMachinePage />
               </ProtectedRoute>
             }
           />
