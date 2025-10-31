@@ -14,21 +14,21 @@ import {
   Building2, 
   Mail, 
   Lock,
-  Fingerprint,
-  KeyRound,
-  Smartphone
+  UserPlus
 } from "lucide-react";
 import Logo from "@/assets/logo/Logo_horizontal.png";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
 
-type AuthMode = 'selection' | 'local' | 'corporate' | 'admin';
+type AuthMode = 'selection' | 'local' | 'corporate' | 'admin' | 'register' | 'register-sso';
 
 const ModernAuthPage = () => {
-  const { login } = useAuth();
+  const { login, register: registerUser } = useAuth();
   const [authMode, setAuthMode] = useState<AuthMode>('selection');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -37,46 +37,67 @@ const ModernAuthPage = () => {
     
     try {
       await login({ email, password });
-      toast.success('Inicio de sesión exitoso');
+      toast.success('Acceso concedido');
     } catch (error) {
-      toast.error('Error al iniciar sesión');
+      toast.error('Error de autenticación');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (password !== confirmPassword) {
+      toast.error('Las contraseñas no coinciden');
+      return;
+    }
+    
+    setLoading(true);
+    
+    try {
+      await registerUser({ name, email, password, confirmPassword });
+      toast.success('Cuenta creada exitosamente');
+      setAuthMode('local');
+    } catch (error) {
+      toast.error('Error al crear la cuenta');
     } finally {
       setLoading(false);
     }
   };
 
   const handleCorporateLogin = () => {
-    // This will redirect to Authentik for corporate login
     toast.info('Redirigiendo a autenticación corporativa...');
-    // TODO: Implement Authentik OIDC flow
-    window.location.href = '/api/auth/authentik/login';
+    // Redirect to SSO/OIDC provider
+    window.location.href = '/api/auth/sso/login';
   };
 
-  const handleAdminLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    
-    try {
-      // Admin login uses the same endpoint but could have different validation
-      await login({ email, password });
-      toast.success('Acceso de administrador concedido');
-    } catch (error) {
-      toast.error('Error en autenticación de administrador');
-    } finally {
-      setLoading(false);
-    }
+  const handleSSORegister = () => {
+    toast.info('Redirigiendo a registro corporativo...');
+    // Redirect to SSO registration
+    window.location.href = '/api/auth/sso/register';
   };
 
-  // Animated background particles
+  // Enhanced animated background with image overlay
   const BackgroundAnimation = () => (
     <div className="absolute inset-0 overflow-hidden">
-      {[...Array(20)].map((_, i) => (
+      {/* Background image with overlay */}
+      <div 
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        style={{
+          backgroundImage: `linear-gradient(135deg, rgba(37, 99, 235, 0.8), rgba(139, 92, 246, 0.6), rgba(236, 72, 153, 0.5)), url('/bg-login.jpg')`,
+        }}
+      />
+      
+      {/* Animated particles */}
+      {[...Array(15)].map((_, i) => (
         <motion.div
           key={i}
-          className="absolute rounded-full bg-gradient-to-br from-blue-400/20 to-purple-400/20"
+          className="absolute rounded-full"
           style={{
-            width: Math.random() * 300 + 50,
-            height: Math.random() * 300 + 50,
+            background: `radial-gradient(circle, rgba(255,255,255,${0.1 + Math.random() * 0.2}) 0%, transparent 70%)`,
+            width: Math.random() * 400 + 100,
+            height: Math.random() * 400 + 100,
             left: `${Math.random() * 100}%`,
             top: `${Math.random() * 100}%`,
           }}
@@ -84,10 +105,10 @@ const ModernAuthPage = () => {
             x: [0, Math.random() * 100 - 50],
             y: [0, Math.random() * 100 - 50],
             scale: [1, 1.2, 1],
-            opacity: [0.1, 0.3, 0.1],
+            opacity: [0.2, 0.4, 0.2],
           }}
           transition={{
-            duration: Math.random() * 10 + 10,
+            duration: Math.random() * 15 + 10,
             repeat: Infinity,
             repeatType: "reverse",
             ease: "easeInOut",
@@ -112,7 +133,7 @@ const ModernAuthPage = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
       >
-        <img src={Logo} alt="Logo" className="h-16 w-auto" />
+        <img src={Logo} alt="Logo" className="h-20 w-auto" />
       </motion.div>
 
       <motion.div
@@ -128,7 +149,7 @@ const ModernAuthPage = () => {
         </p>
       </motion.div>
 
-      <div className="space-y-4">
+      <div className="space-y-3">
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
@@ -138,10 +159,10 @@ const ModernAuthPage = () => {
         >
           <Button
             onClick={() => setAuthMode('local')}
-            className="w-full h-16 text-lg bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-lg"
+            className="w-full h-14 text-base bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-lg"
           >
-            <User className="mr-3 h-6 w-6" />
-            Inicia sesión con usuario y contraseña
+            <User className="mr-3 h-5 w-5" />
+            Usuario y Contraseña
           </Button>
         </motion.div>
 
@@ -154,10 +175,10 @@ const ModernAuthPage = () => {
         >
           <Button
             onClick={() => setAuthMode('corporate')}
-            className="w-full h-16 text-lg bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 shadow-lg"
+            className="w-full h-14 text-base bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 shadow-lg"
           >
-            <Building2 className="mr-3 h-6 w-6" />
-            Inicia sesión cuenta corporativa
+            <Building2 className="mr-3 h-5 w-5" />
+            Cuenta Corporativa
           </Button>
         </motion.div>
 
@@ -170,49 +191,50 @@ const ModernAuthPage = () => {
         >
           <Button
             onClick={() => setAuthMode('admin')}
-            className="w-full h-16 text-lg bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 shadow-lg"
+            className="w-full h-14 text-base bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 shadow-lg"
           >
-            <Shield className="mr-3 h-6 w-6" />
-            Inicia sesión administrador
+            <Shield className="mr-3 h-5 w-5" />
+            Administrador
           </Button>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.6 }}
+          className="pt-4 border-t border-gray-200"
+        >
+          <p className="text-sm text-center text-gray-500 mb-3">
+            ¿No tienes cuenta?
+          </p>
+          <div className="grid grid-cols-2 gap-3">
+            <Button
+              onClick={() => setAuthMode('register')}
+              variant="outline"
+              className="h-12 border-2 border-blue-500 text-blue-600 hover:bg-blue-50"
+            >
+              <UserPlus className="mr-2 h-4 w-4" />
+              Registrarse
+            </Button>
+            <Button
+              onClick={() => setAuthMode('register-sso')}
+              variant="outline"
+              className="h-12 border-2 border-purple-500 text-purple-600 hover:bg-purple-50"
+            >
+              <Building2 className="mr-2 h-4 w-4" />
+              Registro SSO
+            </Button>
+          </div>
         </motion.div>
       </div>
 
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 0.6 }}
-        className="mt-8 pt-6 border-t border-gray-200"
+        transition={{ delay: 0.7 }}
+        className="text-center text-xs text-gray-400 mt-6"
       >
-        <p className="text-sm text-center text-gray-500 mb-4">
-          Métodos de autenticación adicionales
-        </p>
-        <div className="flex justify-center gap-4">
-          <motion.button
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            className="p-3 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors"
-            title="WebAuthn / Touch ID / Face ID"
-          >
-            <Fingerprint className="h-6 w-6 text-gray-700" />
-          </motion.button>
-          <motion.button
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            className="p-3 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors"
-            title="Token físico"
-          >
-            <KeyRound className="h-6 w-6 text-gray-700" />
-          </motion.button>
-          <motion.button
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            className="p-3 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors"
-            title="MFA / 2FA"
-          >
-            <Smartphone className="h-6 w-6 text-gray-700" />
-          </motion.button>
-        </div>
+        <p>Todos los métodos incluyen autenticación multifactor (MFA)</p>
       </motion.div>
     </motion.div>
   );
@@ -233,11 +255,11 @@ const ModernAuthPage = () => {
       </button>
 
       <div className="flex justify-center mb-6">
-        <img src={Logo} alt="Logo" className="h-12 w-auto" />
+        <img src={Logo} alt="Logo" className="h-14 w-auto" />
       </div>
 
       <h2 className="text-2xl font-bold text-center mb-6 bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent">
-        Inicio de Sesión Local
+        Acceso Local
       </h2>
 
       <form onSubmit={handleLogin} className="space-y-4">
@@ -278,8 +300,12 @@ const ModernAuthPage = () => {
           disabled={loading}
           className="w-full h-12 text-lg bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
         >
-          {loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
+          {loading ? 'Autenticando...' : 'Acceder'}
         </Button>
+
+        <p className="text-xs text-center text-gray-500 mt-4">
+          Se requerirá autenticación multifactor (MFA)
+        </p>
       </form>
     </motion.div>
   );
@@ -300,7 +326,7 @@ const ModernAuthPage = () => {
       </button>
 
       <div className="flex justify-center mb-6">
-        <img src={Logo} alt="Logo" className="h-12 w-auto" />
+        <img src={Logo} alt="Logo" className="h-14 w-auto" />
       </div>
 
       <h2 className="text-2xl font-bold text-center mb-6 bg-gradient-to-r from-purple-600 to-purple-700 bg-clip-text text-transparent">
@@ -328,12 +354,12 @@ const ModernAuthPage = () => {
           onClick={handleCorporateLogin}
           className="w-full h-12 text-lg bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800"
         >
-          Continuar con SSO / OIDC
+          Continuar con SSO
         </Button>
 
-        <div className="text-center text-sm text-gray-500 mt-4">
-          Serás redirigido a Authentik para completar la autenticación
-        </div>
+        <p className="text-xs text-center text-gray-500 mt-4">
+          Incluye autenticación multifactor (MFA)
+        </p>
       </div>
     </motion.div>
   );
@@ -354,14 +380,14 @@ const ModernAuthPage = () => {
       </button>
 
       <div className="flex justify-center mb-6">
-        <img src={Logo} alt="Logo" className="h-12 w-auto" />
+        <img src={Logo} alt="Logo" className="h-14 w-auto" />
       </div>
 
       <h2 className="text-2xl font-bold text-center mb-6 bg-gradient-to-r from-red-600 to-red-700 bg-clip-text text-transparent">
-        Acceso de Administrador
+        Acceso Administrativo
       </h2>
 
-      <form onSubmit={handleAdminLogin} className="space-y-4">
+      <form onSubmit={handleLogin} className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="admin-email" className="flex items-center gap-2">
             <Mail className="h-4 w-4" />
@@ -399,14 +425,169 @@ const ModernAuthPage = () => {
           disabled={loading}
           className="w-full h-12 text-lg bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800"
         >
-          {loading ? 'Verificando...' : 'Acceder como Administrador'}
+          {loading ? 'Verificando...' : 'Acceder'}
         </Button>
+
+        <p className="text-xs text-center text-gray-500 mt-4">
+          Requiere autenticación multifactor (MFA) obligatoria
+        </p>
       </form>
     </motion.div>
   );
 
+  // Registration Form
+  const RegisterForm = () => (
+    <motion.div
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: -20 }}
+      transition={{ duration: 0.3 }}
+    >
+      <button
+        onClick={() => setAuthMode('selection')}
+        className="mb-6 text-sm text-gray-600 hover:text-gray-900 flex items-center"
+      >
+        ← Volver
+      </button>
+
+      <div className="flex justify-center mb-6">
+        <img src={Logo} alt="Logo" className="h-14 w-auto" />
+      </div>
+
+      <h2 className="text-2xl font-bold text-center mb-6 bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent">
+        Crear Cuenta
+      </h2>
+
+      <form onSubmit={handleRegister} className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="reg-name">Nombre completo</Label>
+          <Input
+            id="reg-name"
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Tu nombre completo"
+            required
+            className="h-12"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="reg-email" className="flex items-center gap-2">
+            <Mail className="h-4 w-4" />
+            Correo electrónico
+          </Label>
+          <Input
+            id="reg-email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="tu@email.com"
+            required
+            className="h-12"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="reg-password" className="flex items-center gap-2">
+            <Lock className="h-4 w-4" />
+            Contraseña
+          </Label>
+          <Input
+            id="reg-password"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="••••••••"
+            required
+            className="h-12"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="reg-confirm">Confirmar contraseña</Label>
+          <Input
+            id="reg-confirm"
+            type="password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            placeholder="••••••••"
+            required
+            className="h-12"
+          />
+        </div>
+
+        <Button
+          type="submit"
+          disabled={loading}
+          className="w-full h-12 text-lg bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
+        >
+          {loading ? 'Creando cuenta...' : 'Registrarse'}
+        </Button>
+
+        <p className="text-xs text-center text-gray-500 mt-4">
+          Los datos se guardarán en la base de datos y LDAP
+        </p>
+      </form>
+    </motion.div>
+  );
+
+  // SSO Registration
+  const SSORegisterForm = () => (
+    <motion.div
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: -20 }}
+      transition={{ duration: 0.3 }}
+    >
+      <button
+        onClick={() => setAuthMode('selection')}
+        className="mb-6 text-sm text-gray-600 hover:text-gray-900 flex items-center"
+      >
+        ← Volver
+      </button>
+
+      <div className="flex justify-center mb-6">
+        <img src={Logo} alt="Logo" className="h-14 w-auto" />
+      </div>
+
+      <h2 className="text-2xl font-bold text-center mb-6 bg-gradient-to-r from-purple-600 to-purple-700 bg-clip-text text-transparent">
+        Registro Corporativo
+      </h2>
+
+      <div className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="sso-email" className="flex items-center gap-2">
+            <Mail className="h-4 w-4" />
+            Correo electrónico corporativo
+          </Label>
+          <Input
+            id="sso-email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="tu@empresa.com"
+            required
+            className="h-12"
+          />
+        </div>
+
+        <Button
+          onClick={handleSSORegister}
+          className="w-full h-12 text-lg bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800"
+        >
+          Continuar con SSO
+        </Button>
+
+        <p className="text-xs text-center text-gray-500 mt-4">
+          El registro se sincronizará con la base de datos y LDAP corporativo
+        </p>
+      </div>
+    </motion.div>
+  );
+
   return (
-    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
+    <div className="min-h-screen relative overflow-hidden">
       <BackgroundAnimation />
       
       <div className="relative z-10 min-h-screen flex items-center justify-start px-8">
@@ -416,27 +597,20 @@ const ModernAuthPage = () => {
           transition={{ duration: 0.5 }}
           className="w-full max-w-md"
         >
-          <Card className="backdrop-blur-xl bg-white/90 shadow-2xl border-0">
-            <CardHeader>
+          <Card className="backdrop-blur-xl bg-white/95 shadow-2xl border-0">
+            <CardHeader className="pb-6">
               <CardTitle className="text-center">
                 <AnimatePresence mode="wait">
                   {authMode === 'selection' && <SelectionMode key="selection" />}
                   {authMode === 'local' && <LocalLoginForm key="local" />}
                   {authMode === 'corporate' && <CorporateLoginForm key="corporate" />}
                   {authMode === 'admin' && <AdminLoginForm key="admin" />}
+                  {authMode === 'register' && <RegisterForm key="register" />}
+                  {authMode === 'register-sso' && <SSORegisterForm key="register-sso" />}
                 </AnimatePresence>
               </CardTitle>
             </CardHeader>
           </Card>
-
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.7 }}
-            className="mt-6 text-center text-sm text-gray-600"
-          >
-            <p>Powered by Authentik • Secure Authentication</p>
-          </motion.div>
         </motion.div>
       </div>
     </div>
