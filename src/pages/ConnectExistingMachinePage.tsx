@@ -5,10 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
-  Server,
   Terminal,
   Monitor,
-  Download,
   Copy,
   CheckCircle2,
   ArrowRight,
@@ -28,7 +26,7 @@ export default function ConnectExistingMachinePage() {
   const [selectedOS, setSelectedOS] = useState<'linux' | 'windows' | 'macos'>('linux');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [connecting, setConnecting] = useState(false);
+  const [_connecting, setConnecting] = useState(false);
 
   const handleConnect = async () => {
     if (!machineName || !ipAddress) {
