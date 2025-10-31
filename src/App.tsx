@@ -1,7 +1,7 @@
 import { Routes, Route, Navigate } from "react-router";
 import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./components/common/ProtectedRoute";
-import AuthPage from "./pages/AuthPage";
+import ModernAuthPage from "./pages/ModernAuthPage";
 import DashboardPage from "./pages/DashboardPage";
 import ServersPage from "./pages/ServersPage";
 import MonitoringPage from "./pages/MonitoringPage";
@@ -33,7 +33,7 @@ function App() {
             path="/auth"
             element={
               <RedirectToDashboard>
-                <AuthPage />
+                <ModernAuthPage />
               </RedirectToDashboard>
             }
           />
