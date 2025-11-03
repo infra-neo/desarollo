@@ -5,10 +5,7 @@
  */
 
 import type {
-  CloudProvider,
   CloudConnection,
-  CloudInstance,
-  CloudCredentials,
   InfrastructureConfig,
 } from '@/types/cloud.types';
 
