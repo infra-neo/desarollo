@@ -29,34 +29,26 @@ if ! command -v docker &> /dev/null; then
     exit 1
 fi
 
-# Check if docker-compose is installed
-if ! command -v docker-compose &> /dev/null; then
-    print_error "Docker Compose is not installed. Please install Docker Compose first."
-    exit 1
-fi
-
 print_info "Starting deployment of Desarollo application..."
 
 # Check if .env file exists
 if [ ! -f .env ]; then
     print_warn ".env file not found. Creating from .env.example..."
     cp .env.example .env
-    print_warn "Please edit .env file with your configuration before continuing."
-    print_warn "Press Enter to continue or Ctrl+C to exit..."
-    read
+    print_warn "Please edit .env file with your configuration if needed."
 fi
 
-# Build images
-print_info "Building Docker images..."
-docker-compose build
+# Build image
+print_info "Building Docker image..."
+docker build -t desarollo-app:latest .
 
 # Stop existing containers if any
 print_info "Stopping existing containers..."
-docker-compose down
+docker compose down 2>/dev/null || true
 
 # Start services
 print_info "Starting services..."
-docker-compose up -d
+docker compose up -d
 
 # Wait for services to be healthy
 print_info "Waiting for services to be healthy..."
@@ -64,7 +56,7 @@ sleep 10
 
 # Check service status
 print_info "Checking service status..."
-docker-compose ps
+docker compose ps
 
 # Display service URLs
 echo ""
@@ -73,19 +65,16 @@ echo ""
 echo "═══════════════════════════════════════════════════════════"
 echo "Service URLs:"
 echo "═══════════════════════════════════════════════════════════"
-echo "Frontend:              https://gate.kapp4.com/front"
+echo "Main Application:      https://gate.kapp4.com"
+echo "With /front prefix:    https://gate.kapp4.com/front"
 echo "Authentication:        https://gate.kapp4.com/auth"
-echo "Backend API:           https://gate.kapp4.com/api"
-echo "Infrastructure Builder: https://gate.kapp4.com/builder"
 echo "Health Check:          https://gate.kapp4.com/health"
 echo ""
 echo "Direct Access (for testing):"
-echo "Frontend:              http://localhost:8080"
-echo "Backend:               http://localhost:8000"
-echo "Builder Frontend:      http://localhost:3000"
+echo "Application:           http://localhost:8080"
 echo "═══════════════════════════════════════════════════════════"
 echo ""
 
 # Show logs
 print_info "Showing container logs (press Ctrl+C to exit)..."
-docker-compose logs -f
+docker compose logs -f
