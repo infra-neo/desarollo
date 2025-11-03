@@ -1,54 +1,87 @@
 version: '3.8'
 
 services:
-  # Application service
-  app:
-    image: ${APP_IMAGE:-app:latest}
+  # Main frontend application (React app with auth)
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: desarollo-frontend
     ports:
-      - "5173:5173"
+      - "8080:80"
     environment:
       - NODE_ENV=production
-    volumes:
-      - ./data:/app/data
-    deploy:
-      replicas: 2
-      restart_policy:
-        condition: on-failure
-        delay: 5s
-        max_attempts: 3
-      resources:
-        limits:
-          cpus: '1.0'
-          memory: 512M
-        reservations:
-          cpus: '0.5'
-          memory: 256M
+      - VITE_URL_API=http://backend:8000
     networks:
       - app-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
-  # Nginx reverse proxy
-  nginx:
-    image: nginx:alpine
+  # Backend API (FastAPI)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: desarollo-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+    networks:
+      - app-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+  # Infrastructure builder frontend
+  builder-frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: desarollo-builder-frontend
+    ports:
+      - "3000:80"
+    environment:
+      - NODE_ENV=production
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  # Caddy reverse proxy / load balancer
+  caddy:
+    image: caddy:2-alpine
+    container_name: desarollo-caddy
     ports:
       - "80:80"
       - "443:443"
+      - "443:443/udp"
     volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./nginx/certs:/etc/nginx/certs:ro
-    depends_on:
-      - app
-    deploy:
-      replicas: 1
-      restart_policy:
-        condition: on-failure
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
     networks:
       - app-network
+    restart: unless-stopped
+    depends_on:
+      - frontend
+      - backend
+      - builder-frontend
 
 networks:
   app-network:
-    driver: overlay
-    attachable: true
+    driver: bridge
 
 volumes:
-  data:
+  caddy-data:
+    driver: local
+  caddy-config:
     driver: local
