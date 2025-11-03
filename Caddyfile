@@ -1,36 +1,29 @@
 # Caddyfile for gate.kapp4.com
 # Author: Ing. Benjamín Frías — DevOps & Cloud Specialist
-# Purpose: Load balancer configuration for multi-service application running in Docker
+# Purpose: Load balancer configuration for containerized application
 
 # Main domain configuration
 gate.kapp4.com {
     # Enable automatic HTTPS
     # Caddy will automatically obtain and renew SSL certificates
 
-    # Frontend application at /front
+    # Frontend application at /front and root
     handle /front* {
-        # Strip /front prefix and proxy to frontend container on port 8080
+        # Strip /front prefix and proxy to main app container
         uri strip_prefix /front
-        reverse_proxy frontend:8080
+        reverse_proxy app:80
     }
 
-    # Authentication service at /auth
+    # Authentication path (handled by frontend)
     handle /auth* {
-        # Proxy to backend container (auth service)
-        reverse_proxy backend:8000
+        # Proxy to main app container
+        reverse_proxy app:80
     }
 
-    # Backend API at /api
+    # API endpoints (handled by frontend cloud services)
     handle /api* {
-        # Proxy to backend container
-        reverse_proxy backend:8000
-    }
-
-    # Infrastructure builder frontend
-    handle /builder* {
-        # Strip /builder prefix and proxy to infrastructure builder
-        uri strip_prefix /builder
-        reverse_proxy builder-frontend:3000
+        # Proxy to main app container
+        reverse_proxy app:80
     }
 
     # Health check endpoint
@@ -38,9 +31,9 @@ gate.kapp4.com {
         respond "healthy" 200
     }
 
-    # Default route - redirect to frontend
+    # Default route - serve the application
     handle {
-        redir /front permanent
+        reverse_proxy app:80
     }
 
     # Logging

@@ -1,17 +1,16 @@
 version: '3.8'
 
 services:
-  # Main frontend application (React app with auth)
-  frontend:
+  # Main application (React app with auth and cloud management)
+  app:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: desarollo-frontend
+    container_name: desarollo-app
     ports:
       - "8080:80"
     environment:
       - NODE_ENV=production
-      - VITE_URL_API=http://backend:8000
     networks:
       - app-network
     restart: unless-stopped
@@ -21,40 +20,6 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
-
-  # Backend API (FastAPI)
-  backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    container_name: desarollo-backend
-    ports:
-      - "8000:8000"
-    environment:
-      - PYTHONUNBUFFERED=1
-    networks:
-      - app-network
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 20s
-
-  # Infrastructure builder frontend
-  builder-frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    container_name: desarollo-builder-frontend
-    ports:
-      - "3000:80"
-    environment:
-      - NODE_ENV=production
-    networks:
-      - app-network
-    restart: unless-stopped
 
   # Caddy reverse proxy / load balancer
   caddy:
@@ -72,9 +37,7 @@ services:
       - app-network
     restart: unless-stopped
     depends_on:
-      - frontend
-      - backend
-      - builder-frontend
+      - app
 
 networks:
   app-network:
