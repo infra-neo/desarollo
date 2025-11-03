@@ -61,6 +61,8 @@ class CloudService {
     }
 
     // Local mode: Store in localStorage
+    // WARNING: In production, credentials should be encrypted!
+    // This is for development/testing only
     const connection: CloudConnection = {
       id: connectionId,
       name: data.name,
@@ -68,7 +70,8 @@ class CloudService {
       region: data.region,
       status: 'connected',
       created_at: new Date().toISOString(),
-      credentials: data.credentials, // In production, encrypt this!
+      // Note: Credentials are NOT stored in local mode for security
+      // They must be re-entered when needed or use backend storage
     };
 
     this.connections.set(connectionId, connection);

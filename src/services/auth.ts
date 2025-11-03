@@ -30,7 +30,7 @@ class Auth {
   }
 
   static async register(name: string, email: string, password: string): Promise<any> {
-    // Check if user already exists locally
+    // Check if user already exists locally (using empty string as placeholder)
     const existingUser = findLocalUser(email, "");
     if (existingUser) {
       throw new Error("El usuario ya existe");
