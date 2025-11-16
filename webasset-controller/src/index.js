@@ -7,6 +7,7 @@
 require('dotenv').config();
 const express = require('express');
 const session = require('express-session');
+const csrf = require('csurf');
 const helmet = require('helmet');
 const cors = require('cors');
 const rateLimit = require('express-rate-limit');
@@ -66,6 +67,16 @@ app.use(session({
     maxAge: parseInt(process.env.SESSION_TIMEOUT || '1800') * 1000
   }
 }));
+
+// CSRF protection for state-changing operations
+// Note: OIDC callback is exempt as it comes from external provider
+const csrfProtection = csrf({ 
+  cookie: false,  // Use session-based CSRF tokens
+  ignoreMethods: ['GET', 'HEAD', 'OPTIONS']
+});
+
+// Apply CSRF protection to API routes that modify state
+app.use('/api/session/*', csrfProtection);
 
 // OIDC Client
 let oidcClient;
