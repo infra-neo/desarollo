@@ -44,11 +44,17 @@ const limiter = rateLimit({
 });
 app.use('/api/', limiter);
 
+// Rate limiting for auth endpoints (stricter)
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10 // limit each IP to 10 auth requests per windowMs
+});
+
 // Body parsing
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Session configuration
+// Session configuration with sameSite for CSRF protection
 app.use(session({
   secret: process.env.SESSION_SECRET || 'change-me-in-production',
   resave: false,
@@ -56,6 +62,7 @@ app.use(session({
   cookie: {
     secure: process.env.NODE_ENV === 'production',
     httpOnly: true,
+    sameSite: 'lax', // CSRF protection
     maxAge: parseInt(process.env.SESSION_TIMEOUT || '1800') * 1000
   }
 }));
@@ -99,8 +106,8 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Auth routes
-app.get('/auth/login', (req, res) => {
+// Auth routes with rate limiting
+app.get('/auth/login', authLimiter, (req, res) => {
   const authorizationUrl = oidcClient.authorizationUrl({
     scope: 'openid email profile',
     state: req.query.redirect || '/'
@@ -108,7 +115,7 @@ app.get('/auth/login', (req, res) => {
   res.redirect(authorizationUrl);
 });
 
-app.get('/auth/callback', async (req, res) => {
+app.get('/auth/callback', authLimiter, async (req, res) => {
   try {
     const params = oidcClient.callbackParams(req);
     const tokenSet = await oidcClient.callback(process.env.OIDC_REDIRECT_URI, params);

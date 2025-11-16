@@ -24,6 +24,8 @@ jobs:
   lint:
     name: Lint and Format Check
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     defaults:
       run:
         working-directory: ./webasset-controller
@@ -53,6 +55,9 @@ jobs:
   security-scan:
     name: Security Vulnerability Scan
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
     defaults:
       run:
         working-directory: ./webasset-controller
@@ -81,6 +86,8 @@ jobs:
   test:
     name: Run Tests
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     defaults:
       run:
         working-directory: ./webasset-controller
@@ -181,6 +188,8 @@ jobs:
   e2e-tests:
     name: E2E Tests
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     needs: build
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     

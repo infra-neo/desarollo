@@ -23,6 +23,8 @@ jobs:
   terraform-fmt:
     name: Terraform Format Check
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     defaults:
       run:
         working-directory: ./terraform
@@ -48,6 +50,8 @@ jobs:
   terraform-validate:
     name: Terraform Validate
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     strategy:
       matrix:
         module:
@@ -80,6 +84,8 @@ jobs:
   tflint:
     name: TFLint
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     defaults:
       run:
         working-directory: ./terraform
@@ -102,6 +108,9 @@ jobs:
   tfsec:
     name: TFSec Security Scan
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
     
     steps:
       - name: Checkout code
@@ -123,6 +132,9 @@ jobs:
   checkov:
     name: Checkov Security Scan
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
     
     steps:
       - name: Checkout code
@@ -146,6 +158,8 @@ jobs:
   terraform-docs:
     name: Generate Terraform Docs
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     
     steps:
@@ -164,6 +178,8 @@ jobs:
   summary:
     name: Lint Summary
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     needs: [terraform-fmt, terraform-validate, tflint, tfsec, checkov]
     if: always()
     
