@@ -1,0 +1,289 @@
+# Banking Sites Configuration for WebAsset Controller
+# Configuration for automated login to Mexican banking sites
+
+banking_sites:
+  # BMG - Banco Monex Grupo Financiero
+  - code: BMG
+    name: Banco Monex (BMG)
+    url: https://www.monex.com.mx
+    login_url: https://www.monex.com.mx/login
+    username_selector: 'input[name="usuario"]'
+    password_selector: 'input[name="password"]'
+    submit_selector: 'button[type="submit"]'
+    success_indicator: '.dashboard-container'
+    is_active: true
+  
+  # FACTA - Factorin
+  - code: FACTA
+    name: Factorin (FACTA)
+    url: https://www.factorin.com
+    login_url: https://www.factorin.com/login
+    username_selector: 'input[name="username"]'
+    password_selector: 'input[name="password"]'
+    submit_selector: 'button.btn-login'
+    success_indicator: '#main-dashboard'
+    is_active: true
+  
+  # BBVA Mexico
+  - code: BBVA
+    name: BBVA México
+    url: https://www.bbva.mx
+    login_url: https://www.bbva.mx/personas/login.html
+    username_selector: 'input#usuario'
+    password_selector: 'input#contrasena'
+    submit_selector: 'button#btnEntrar'
+    success_indicator: '.area-privada'
+    is_active: true
+  
+  # Santander Mexico
+  - code: SANTANDER
+    name: Santander México
+    url: https://www.santander.com.mx
+    login_url: https://www.santander.com.mx/login
+    username_selector: 'input#usuario'
+    password_selector: 'input#password'
+    submit_selector: 'button.boton-entrar'
+    success_indicator: '.portal-cliente'
+    is_active: true
+  
+  # Banamex (Citibanamex)
+  - code: BANAMEX
+    name: Citibanamex
+    url: https://www.banamex.com
+    login_url: https://www.banamex.com/login
+    username_selector: 'input[name="usuario"]'
+    password_selector: 'input[name="password"]'
+    submit_selector: 'button#entrar'
+    success_indicator: '.bienvenido'
+    is_active: true
+  
+  # HSBC Mexico
+  - code: HSBC
+    name: HSBC México
+    url: https://www.hsbc.com.mx
+    login_url: https://www.hsbc.com.mx/1/2/es/personas/banca-internet
+    username_selector: 'input#userid'
+    password_selector: 'input#password'
+    submit_selector: 'button#login-btn'
+    success_indicator: '.dashboard'
+    is_active: true
+  
+  # Scotiabank Mexico
+  - code: SCOTIABANK
+    name: Scotiabank México
+    url: https://www.scotiabank.com.mx
+    login_url: https://www.scotiabank.com.mx/login
+    username_selector: 'input#username'
+    password_selector: 'input#password'
+    submit_selector: 'button[type="submit"]'
+    success_indicator: '.home-banking'
+    is_active: true
+  
+  # Banorte
+  - code: BANORTE
+    name: Banorte
+    url: https://www.banorte.com
+    login_url: https://www.banorte.com/login
+    username_selector: 'input#usuario'
+    password_selector: 'input#nip'
+    submit_selector: 'button.entrar'
+    success_indicator: '.portal-banorte'
+    is_active: true
+  
+  # Inbursa
+  - code: INBURSA
+    name: Banco Inbursa
+    url: https://www.inbursa.com
+    login_url: https://www.inbursa.com/login
+    username_selector: 'input[name="user"]'
+    password_selector: 'input[name="pass"]'
+    submit_selector: 'button.btn-entrar'
+    success_indicator: '.dashboard'
+    is_active: true
+  
+  # Banco Azteca
+  - code: AZTECA
+    name: Banco Azteca
+    url: https://www.bancoazteca.com.mx
+    login_url: https://www.bancoazteca.com.mx/login
+    username_selector: 'input#usuario'
+    password_selector: 'input#password'
+    submit_selector: 'button#ingresar'
+    success_indicator: '.area-cliente'
+    is_active: true
+  
+  # Afirme
+  - code: AFIRME
+    name: Banco Afirme
+    url: https://www.afirme.com
+    login_url: https://www.afirme.com/login
+    username_selector: 'input[name="usuario"]'
+    password_selector: 'input[name="password"]'
+    submit_selector: 'button.login'
+    success_indicator: '.portal'
+    is_active: true
+  
+  # Banregio
+  - code: BANREGIO
+    name: Banregio
+    url: https://www.banregio.com
+    login_url: https://www.banregio.com/login
+    username_selector: 'input#user'
+    password_selector: 'input#pass'
+    submit_selector: 'button#submit'
+    success_indicator: '.main-content'
+    is_active: true
+  
+  # BanBajio
+  - code: BANBAJIO
+    name: BanBajío
+    url: https://www.bb.com.mx
+    login_url: https://www.bb.com.mx/login
+    username_selector: 'input#usuario'
+    password_selector: 'input#contrasena'
+    submit_selector: 'button#entrar'
+    success_indicator: '.dashboard'
+    is_active: true
+  
+  # BanCoppel
+  - code: BANCOPPEL
+    name: BanCoppel
+    url: https://www.bancoppel.com
+    login_url: https://www.bancoppel.com/login
+    username_selector: 'input[name="user"]'
+    password_selector: 'input[name="password"]'
+    submit_selector: 'button.btn-login'
+    success_indicator: '.portal-bancoppel'
+    is_active: true
+  
+  # Compartamos Banco
+  - code: COMPARTAMOS
+    name: Compartamos Banco
+    url: https://www.compartamos.com.mx
+    login_url: https://www.compartamos.com.mx/login
+    username_selector: 'input#usuario'
+    password_selector: 'input#password'
+    submit_selector: 'button#entrar'
+    success_indicator: '.dashboard'
+    is_active: true
+  
+  # Banco del Bienestar
+  - code: BIENESTAR
+    name: Banco del Bienestar
+    url: https://www.bancodelbienestar.com.mx
+    login_url: https://www.bancodelbienestar.com.mx/login
+    username_selector: 'input#usuario'
+    password_selector: 'input#nip'
+    submit_selector: 'button#ingresar'
+    success_indicator: '.main-page'
+    is_active: true
+  
+  # Banco Multiva
+  - code: MULTIVA
+    name: Banco Multiva
+    url: https://www.multiva.com.mx
+    login_url: https://www.multiva.com.mx/login
+    username_selector: 'input[name="usuario"]'
+    password_selector: 'input[name="password"]'
+    submit_selector: 'button[type="submit"]'
+    success_indicator: '.portal'
+    is_active: true
+  
+  # Banco Ve por Más
+  - code: VEPORMAS
+    name: Banco Ve por Más
+    url: https://www.vepormas.com.mx
+    login_url: https://www.vepormas.com.mx/login
+    username_selector: 'input#user'
+    password_selector: 'input#pass'
+    submit_selector: 'button.login-btn'
+    success_indicator: '.dashboard'
+    is_active: true
+  
+  # Banca Mifel
+  - code: MIFEL
+    name: Banca Mifel
+    url: https://www.mifel.com.mx
+    login_url: https://www.mifel.com.mx/login
+    username_selector: 'input#usuario'
+    password_selector: 'input#password'
+    submit_selector: 'button#entrar'
+    success_indicator: '.area-privada'
+    is_active: true
+  
+  # Banco Invex
+  - code: INVEX
+    name: Banco Invex
+    url: https://www.invex.com
+    login_url: https://www.invex.com/login
+    username_selector: 'input[name="user"]'
+    password_selector: 'input[name="password"]'
+    submit_selector: 'button.login'
+    success_indicator: '.main-dashboard'
+    is_active: true
+  
+  # Banco Sabadell
+  - code: SABADELL
+    name: Banco Sabadell México
+    url: https://www.sabadell.com.mx
+    login_url: https://www.sabadell.com.mx/login
+    username_selector: 'input#usuario'
+    password_selector: 'input#contrasena'
+    submit_selector: 'button#acceder'
+    success_indicator: '.portal-cliente'
+    is_active: true
+  
+  # American Express Mexico
+  - code: AMEX
+    name: American Express México
+    url: https://www.americanexpress.com.mx
+    login_url: https://www.americanexpress.com.mx/login
+    username_selector: 'input#eliloUserID'
+    password_selector: 'input#eliloPassword'
+    submit_selector: 'button#loginSubmit'
+    success_indicator: '.account-summary'
+    is_active: true
+  
+  # Banco Actinver
+  - code: ACTINVER
+    name: Banco Actinver
+    url: https://www.actinver.com
+    login_url: https://www.actinver.com/login
+    username_selector: 'input#usuario'
+    password_selector: 'input#password'
+    submit_selector: 'button#entrar'
+    success_indicator: '.dashboard'
+    is_active: true
+  
+  # Banco Base
+  - code: BASE
+    name: Banco Base
+    url: https://www.bancobase.com
+    login_url: https://www.bancobase.com/login
+    username_selector: 'input[name="username"]'
+    password_selector: 'input[name="password"]'
+    submit_selector: 'button.btn-login'
+    success_indicator: '.portal'
+    is_active: true
+  
+  # Intercam Banco
+  - code: INTERCAM
+    name: Intercam Banco
+    url: https://www.intercam.com.mx
+    login_url: https://www.intercam.com.mx/login
+    username_selector: 'input#usuario'
+    password_selector: 'input#password'
+    submit_selector: 'button#ingresar'
+    success_indicator: '.main-content'
+    is_active: true
+  
+  # Monexcam (additional)
+  - code: MONEXCAM
+    name: Monexcam
+    url: https://www.monexcam.com
+    login_url: https://www.monexcam.com/login
+    username_selector: 'input[name="user"]'
+    password_selector: 'input[name="pass"]'
+    submit_selector: 'button[type="submit"]'
+    success_indicator: '.dashboard'
+    is_active: true

@@ -1,0 +1,336 @@
+version: '3.8'
+
+# MCP Server 2 - KasmWeb Architecture
+# Complete stack with Authentik, Tailscale, Traefik, KasmWeb, Infisical, 1Panel, WebAsset Controller
+
+networks:
+  mcp-internal:
+    driver: bridge
+    internal: false
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+  
+  kasm-isolated:
+    driver: bridge
+    internal: true
+    ipam:
+      config:
+        - subnet: 172.21.0.0/16
+
+volumes:
+  postgres_data:
+  redis_data:
+  authentik_media:
+  authentik_templates:
+  authentik_certs:
+  kasm_data:
+  kasm_recordings:
+  infisical_data:
+  onepanel_data:
+  traefik_certs:
+  tailscale_data:
+  webasset_logs:
+
+services:
+  # ====================
+  # PostgreSQL - Central Database
+  # ====================
+  postgres:
+    image: postgres:15-alpine
+    container_name: mcp-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_MULTIPLE_DATABASES: ${POSTGRES_DB_AUTHENTIK},${POSTGRES_DB_KASM},${POSTGRES_DB_INFISICAL},${POSTGRES_DB_1PANEL},${POSTGRES_DB_WEBASSET}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./configs/postgres/init-databases.sh:/docker-entrypoint-initdb.d/init-databases.sh:ro
+    networks:
+      - mcp-internal
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ====================
+  # Redis - Cache and Session Store
+  # ====================
+  redis:
+    image: redis:7-alpine
+    container_name: mcp-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    networks:
+      - mcp-internal
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ====================
+  # Authentik - SSO and Identity Provider
+  # ====================
+  authentik-server:
+    image: ghcr.io/goauthentik/server:latest
+    container_name: mcp-authentik-server
+    restart: unless-stopped
+    command: server
+    environment:
+      AUTHENTIK_SECRET_KEY: ${AUTHENTIK_SECRET_KEY}
+      AUTHENTIK_ERROR_REPORTING__ENABLED: ${AUTHENTIK_ERROR_REPORTING_ENABLED}
+      AUTHENTIK_REDIS__HOST: ${AUTHENTIK_REDIS__HOST}
+      AUTHENTIK_POSTGRESQL__HOST: ${AUTHENTIK_POSTGRESQL__HOST}
+      AUTHENTIK_POSTGRESQL__NAME: ${AUTHENTIK_POSTGRESQL__NAME}
+      AUTHENTIK_POSTGRESQL__USER: ${AUTHENTIK_POSTGRESQL__USER}
+      AUTHENTIK_POSTGRESQL__PASSWORD: ${AUTHENTIK_POSTGRESQL__PASSWORD}
+    volumes:
+      - authentik_media:/media
+      - authentik_templates:/templates
+      - authentik_certs:/certs
+    networks:
+      - mcp-internal
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.authentik.rule=Host(`auth.${DOMAIN}`)"
+      - "traefik.http.routers.authentik.entrypoints=websecure"
+      - "traefik.http.routers.authentik.tls.certresolver=letsencrypt"
+      - "traefik.http.services.authentik.loadbalancer.server.port=9000"
+
+  authentik-worker:
+    image: ghcr.io/goauthentik/server:latest
+    container_name: mcp-authentik-worker
+    restart: unless-stopped
+    command: worker
+    environment:
+      AUTHENTIK_SECRET_KEY: ${AUTHENTIK_SECRET_KEY}
+      AUTHENTIK_ERROR_REPORTING__ENABLED: ${AUTHENTIK_ERROR_REPORTING_ENABLED}
+      AUTHENTIK_REDIS__HOST: ${AUTHENTIK_REDIS__HOST}
+      AUTHENTIK_POSTGRESQL__HOST: ${AUTHENTIK_POSTGRESQL__HOST}
+      AUTHENTIK_POSTGRESQL__NAME: ${AUTHENTIK_POSTGRESQL__NAME}
+      AUTHENTIK_POSTGRESQL__USER: ${AUTHENTIK_POSTGRESQL__USER}
+      AUTHENTIK_POSTGRESQL__PASSWORD: ${AUTHENTIK_POSTGRESQL__PASSWORD}
+    volumes:
+      - authentik_media:/media
+      - authentik_templates:/templates
+      - authentik_certs:/certs
+    networks:
+      - mcp-internal
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # ====================
+  # KasmWeb - Remote Browser Sessions
+  # ====================
+  kasm:
+    image: kasmweb/kasm:latest
+    container_name: mcp-kasm
+    restart: unless-stopped
+    privileged: false
+    environment:
+      KASM_PORT: ${KASM_PORT}
+      DATABASE_HOSTNAME: ${KASM_DATABASE_HOSTNAME}
+      DATABASE_PORT: ${KASM_DATABASE_PORT}
+      DATABASE_NAME: ${KASM_DATABASE_NAME}
+      DATABASE_USER: ${KASM_DATABASE_USER}
+      DATABASE_PASSWORD: ${KASM_DATABASE_PASSWORD}
+      REDIS_HOST: ${KASM_REDIS_HOST}
+      SESSION_RECORDING_ENABLED: ${KASM_SESSION_RECORDING_ENABLED}
+    volumes:
+      - kasm_data:/opt/kasm/current
+      - kasm_recordings:/opt/kasm/current/recordings
+      - ./configs/kasm/kasm-config.yml:/opt/kasm/current/conf/app/config.yml:ro
+    networks:
+      - mcp-internal
+      - kasm-isolated
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.kasm.rule=Host(`kasm.${DOMAIN}`)"
+      - "traefik.http.routers.kasm.entrypoints=websecure"
+      - "traefik.http.routers.kasm.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.kasm.middlewares=authentik@docker"
+      - "traefik.http.services.kasm.loadbalancer.server.port=443"
+      - "traefik.http.services.kasm.loadbalancer.server.scheme=https"
+
+  # ====================
+  # Infisical - Secret Management
+  # ====================
+  infisical:
+    image: infisical/infisical:latest
+    container_name: mcp-infisical
+    restart: unless-stopped
+    environment:
+      ENCRYPTION_KEY: ${INFISICAL_ENCRYPTION_KEY}
+      JWT_SECRET: ${INFISICAL_JWT_SECRET}
+      DB_CONNECTION_URI: postgresql://${INFISICAL_DB_USER}:${INFISICAL_DB_PASSWORD}@${INFISICAL_DB_HOST}:${INFISICAL_DB_PORT}/${INFISICAL_DB_NAME}
+      SITE_URL: https://vault.${DOMAIN}
+    volumes:
+      - infisical_data:/app/data
+    networks:
+      - mcp-internal
+    depends_on:
+      postgres:
+        condition: service_healthy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.infisical.rule=Host(`vault.${DOMAIN}`)"
+      - "traefik.http.routers.infisical.entrypoints=websecure"
+      - "traefik.http.routers.infisical.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.infisical.middlewares=authentik@docker"
+      - "traefik.http.services.infisical.loadbalancer.server.port=8080"
+
+  # ====================
+  # 1Panel - Server Management
+  # ====================
+  onepanel:
+    image: 1panel/1panel:latest
+    container_name: mcp-1panel
+    restart: unless-stopped
+    environment:
+      PANEL_APP_PORT: ${ONEPANEL_PORT}
+      DB_HOST: ${ONEPANEL_DB_HOST}
+      DB_PORT: ${ONEPANEL_DB_PORT}
+      DB_NAME: ${ONEPANEL_DB_NAME}
+      DB_USER: ${ONEPANEL_DB_USER}
+      DB_PASS: ${ONEPANEL_DB_PASSWORD}
+    volumes:
+      - onepanel_data:/opt/1panel
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - mcp-internal
+    depends_on:
+      postgres:
+        condition: service_healthy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.onepanel.rule=Host(`panel.${DOMAIN}`)"
+      - "traefik.http.routers.onepanel.entrypoints=websecure"
+      - "traefik.http.routers.onepanel.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.onepanel.middlewares=authentik@docker"
+      - "traefik.http.services.onepanel.loadbalancer.server.port=10000"
+
+  # ====================
+  # WebAsset Controller - Banking Auto-Login
+  # ====================
+  webasset-controller:
+    build:
+      context: ./webasset-controller
+      dockerfile: Dockerfile
+    container_name: mcp-webasset
+    restart: unless-stopped
+    environment:
+      FLASK_ENV: production
+      SECRET_KEY: ${WEBASSET_SECRET_KEY}
+      DATABASE_URL: postgresql://${WEBASSET_DB_USER}:${WEBASSET_DB_PASSWORD}@${WEBASSET_DB_HOST}:${WEBASSET_DB_PORT}/${WEBASSET_DB_NAME}
+      AUTHENTIK_URL: ${WEBASSET_AUTHENTIK_URL}
+      AUTHENTIK_CLIENT_ID: ${WEBASSET_AUTHENTIK_CLIENT_ID}
+      AUTHENTIK_CLIENT_SECRET: ${WEBASSET_AUTHENTIK_CLIENT_SECRET}
+      INFISICAL_URL: ${WEBASSET_INFISICAL_URL}
+      INFISICAL_TOKEN: ${WEBASSET_INFISICAL_TOKEN}
+      KASM_URL: ${WEBASSET_KASM_URL}
+      KASM_API_KEY: ${WEBASSET_KASM_API_KEY}
+      KASM_API_SECRET: ${WEBASSET_KASM_API_SECRET}
+      MAX_SESSIONS_PER_USER: ${MAX_SESSIONS_PER_USER}
+    volumes:
+      - webasset_logs:/app/logs
+      - ./configs/webasset/banking_sites.yml:/app/config/banking_sites.yml:ro
+    networks:
+      - mcp-internal
+      - kasm-isolated
+    depends_on:
+      - postgres
+      - authentik-server
+      - infisical
+      - kasm
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.webasset.rule=Host(`web.${DOMAIN}`)"
+      - "traefik.http.routers.webasset.entrypoints=websecure"
+      - "traefik.http.routers.webasset.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.webasset.middlewares=authentik@docker"
+      - "traefik.http.services.webasset.loadbalancer.server.port=5000"
+
+  # ====================
+  # Traefik - Reverse Proxy and Load Balancer
+  # ====================
+  traefik:
+    image: traefik:v2.10
+    container_name: mcp-traefik
+    restart: unless-stopped
+    command:
+      - "--api.dashboard=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL}"
+      - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
+      - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web"
+      - "--log.level=${TRAEFIK_LOG_LEVEL}"
+      - "--accesslog=true"
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - traefik_certs:/letsencrypt
+      - ./configs/traefik/traefik.yml:/etc/traefik/traefik.yml:ro
+      - ./configs/traefik/dynamic.yml:/etc/traefik/dynamic.yml:ro
+    networks:
+      - mcp-internal
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.traefik.rule=Host(`traefik.${DOMAIN}`)"
+      - "traefik.http.routers.traefik.entrypoints=websecure"
+      - "traefik.http.routers.traefik.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.traefik.service=api@internal"
+      - "traefik.http.routers.traefik.middlewares=authentik@docker"
+      
+      # Authentik Forward Auth Middleware
+      - "traefik.http.middlewares.authentik.forwardauth.address=http://authentik-server:9000/outpost.goauthentik.io/auth/traefik"
+      - "traefik.http.middlewares.authentik.forwardauth.trustForwardHeader=true"
+      - "traefik.http.middlewares.authentik.forwardauth.authResponseHeaders=X-authentik-username,X-authentik-groups,X-authentik-email,X-authentik-name,X-authentik-uid"
+
+  # ====================
+  # Tailscale - Zero Trust VPN
+  # ====================
+  tailscale:
+    image: tailscale/tailscale:latest
+    container_name: mcp-tailscale
+    restart: unless-stopped
+    hostname: ${TAILSCALE_HOSTNAME}
+    environment:
+      TS_AUTHKEY: ${TAILSCALE_AUTHKEY}
+      TS_STATE_DIR: /var/lib/tailscale
+      TS_USERSPACE: "false"
+      TS_EXTRA_ARGS: --advertise-tags=tag:mcp-server
+    volumes:
+      - tailscale_data:/var/lib/tailscale
+      - /dev/net/tun:/dev/net/tun
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    networks:
+      - mcp-internal
+    sysctls:
+      - net.ipv4.ip_forward=1
+      - net.ipv6.conf.all.forwarding=1
