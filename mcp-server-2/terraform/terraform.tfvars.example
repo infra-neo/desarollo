@@ -1,0 +1,51 @@
+# MCP Server 2 Terraform Variables Example
+# Copy this file to terraform.tfvars and fill in your values
+
+# GCP Project Configuration
+project_id = "your-gcp-project-id"
+region     = "us-central1"
+zone       = "us-central1-a"
+
+# Network Configuration
+network_name   = "mcp-server-2-network"
+subnet_name    = "mcp-server-2-subnet"
+subnet_cidr    = "10.0.0.0/24"
+static_ip_name = "mcp-server-2-ip"
+
+# Compute Configuration
+instance_name = "mcp-server-2"
+machine_type  = "e2-standard-4"  # 4 vCPUs, 16 GB RAM
+disk_size_gb  = 100
+
+# Additional disks for data persistence
+additional_disks = [
+  {
+    name       = "mcp-data-disk"
+    size_gb    = 200
+    type       = "pd-standard"
+    mount_path = "/mnt/mcp-data"
+  },
+  {
+    name       = "mcp-recordings-disk"
+    size_gb    = 500
+    type       = "pd-standard"
+    mount_path = "/mnt/mcp-recordings"
+  }
+]
+
+# Network Tags
+network_tags = ["mcp-server-2", "web-server", "zero-trust"]
+
+# Tailscale Configuration
+# Get your auth key from https://login.tailscale.com/admin/settings/keys
+tailscale_authkey = "tskey-auth-XXXXXXXXXXXXXXXX-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+
+# Domain Configuration
+domain     = "example.com"
+acme_email = "admin@example.com"
+
+# Secrets (use strong, random values)
+postgres_password        = "changeme-strong-postgres-password"
+authentik_secret_key     = "changeme-authentik-secret-key-min-50-chars-random-string"
+kasm_admin_password      = "changeme-strong-kasm-admin-password"
+infisical_encryption_key = "changeme-32-char-encryption-key"
