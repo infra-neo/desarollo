@@ -27,7 +27,7 @@ resource "google_sql_database_instance" "postgres" {
     ip_configuration {
       ipv4_enabled    = var.public_ip_enabled
       private_network = var.vpc_network_id
-      require_ssl     = true
+      ssl_mode        = "ENCRYPTED_ONLY"
 
       dynamic "authorized_networks" {
         for_each = var.authorized_networks
