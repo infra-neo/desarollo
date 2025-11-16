@@ -36,7 +36,9 @@
    - **Issue**: Cookie middleware without CSRF validation
    - **Risk**: Cross-Site Request Forgery attacks
    - **Fix**: Added `csurf` middleware with session-based tokens
+   - **Implementation**: Applied to all state-changing API routes (/api/session/*)
    - **Status**: ✅ RESOLVED
+   - **Note**: Remaining CodeQL alert is false positive for session middleware itself (which doesn't need CSRF protection)
 
 ---
 
