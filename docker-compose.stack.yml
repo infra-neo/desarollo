@@ -1,0 +1,327 @@
+version: '3.8'
+
+# MCP Server Infrastructure Stack
+# Author: Ing. Benjamín Frías — DevOps & Cloud Specialist
+# Complete stack with: Authentik, Traefik, JumpServer, Infisical, 1Panel, WebAsset Controller
+
+networks:
+  traefik-public:
+    driver: overlay
+    attachable: true
+  backend:
+    driver: overlay
+    internal: true
+    attachable: true
+  database:
+    driver: overlay
+    internal: true
+
+volumes:
+  authentik-media:
+  authentik-templates:
+  authentik-certs:
+  infisical-data:
+  jumpserver-data:
+  jumpserver-logs:
+  onepanel-data:
+  webasset-data:
+  traefik-certs:
+  redis-data:
+
+services:
+  # ===========================================
+  # Traefik Reverse Proxy
+  # ===========================================
+  traefik:
+    image: traefik:v2.10
+    command:
+      - "--api.dashboard=true"
+      - "--providers.docker=true"
+      - "--providers.docker.swarmMode=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--providers.docker.network=traefik-public"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL:-admin@example.com}"
+      - "--certificatesresolvers.letsencrypt.acme.storage=/certs/acme.json"
+      - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web"
+      - "--log.level=INFO"
+      - "--accesslog=true"
+      - "--metrics.prometheus=true"
+    ports:
+      - "443:443"
+      - "80:80"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - traefik-certs:/certs
+    networks:
+      - traefik-public
+    deploy:
+      mode: global
+      placement:
+        constraints:
+          - node.role == manager
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.traefik.rule=Host(`traefik.${DOMAIN:-localhost}`)"
+        - "traefik.http.routers.traefik.entrypoints=websecure"
+        - "traefik.http.routers.traefik.tls.certresolver=letsencrypt"
+        - "traefik.http.routers.traefik.service=api@internal"
+        - "traefik.http.routers.traefik.middlewares=auth-authentik@docker"
+        - "traefik.http.services.traefik.loadbalancer.server.port=8080"
+
+  # ===========================================
+  # Redis Cache (for Authentik and others)
+  # ===========================================
+  redis:
+    image: redis:7-alpine
+    command: --save 60 1 --loglevel warning
+    volumes:
+      - redis-data:/data
+    networks:
+      - backend
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+
+  # ===========================================
+  # Authentik - Identity Provider
+  # ===========================================
+  authentik-server:
+    image: ghcr.io/goauthentik/server:2024.2.2
+    command: server
+    environment:
+      AUTHENTIK_REDIS__HOST: redis
+      AUTHENTIK_POSTGRESQL__HOST: ${POSTGRES_HOST}
+      AUTHENTIK_POSTGRESQL__NAME: ${AUTHENTIK_DB_NAME:-authentik}
+      AUTHENTIK_POSTGRESQL__USER: ${AUTHENTIK_DB_USER:-authentik}
+      AUTHENTIK_POSTGRESQL__PASSWORD: ${AUTHENTIK_DB_PASSWORD}
+      AUTHENTIK_SECRET_KEY: ${AUTHENTIK_SECRET_KEY}
+      AUTHENTIK_ERROR_REPORTING__ENABLED: "false"
+      AUTHENTIK_LOG_LEVEL: info
+    volumes:
+      - authentik-media:/media
+      - authentik-templates:/templates
+      - authentik-certs:/certs
+    networks:
+      - traefik-public
+      - backend
+      - database
+    depends_on:
+      - redis
+    deploy:
+      replicas: 2
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.authentik.rule=Host(`auth.${DOMAIN:-localhost}`)"
+        - "traefik.http.routers.authentik.entrypoints=websecure"
+        - "traefik.http.routers.authentik.tls.certresolver=letsencrypt"
+        - "traefik.http.services.authentik.loadbalancer.server.port=9000"
+        # Forward Auth Middleware
+        - "traefik.http.middlewares.auth-authentik.forwardauth.address=http://authentik-server:9000/outpost.goauthentik.io/auth/traefik"
+        - "traefik.http.middlewares.auth-authentik.forwardauth.trustForwardHeader=true"
+        - "traefik.http.middlewares.auth-authentik.forwardauth.authResponseHeaders=X-authentik-username,X-authentik-groups,X-authentik-email,X-authentik-name,X-authentik-uid"
+
+  authentik-worker:
+    image: ghcr.io/goauthentik/server:2024.2.2
+    command: worker
+    environment:
+      AUTHENTIK_REDIS__HOST: redis
+      AUTHENTIK_POSTGRESQL__HOST: ${POSTGRES_HOST}
+      AUTHENTIK_POSTGRESQL__NAME: ${AUTHENTIK_DB_NAME:-authentik}
+      AUTHENTIK_POSTGRESQL__USER: ${AUTHENTIK_DB_USER:-authentik}
+      AUTHENTIK_POSTGRESQL__PASSWORD: ${AUTHENTIK_DB_PASSWORD}
+      AUTHENTIK_SECRET_KEY: ${AUTHENTIK_SECRET_KEY}
+      AUTHENTIK_ERROR_REPORTING__ENABLED: "false"
+    volumes:
+      - authentik-media:/media
+      - authentik-templates:/templates
+      - authentik-certs:/certs
+    networks:
+      - backend
+      - database
+    depends_on:
+      - redis
+    deploy:
+      replicas: 2
+
+  # ===========================================
+  # Infisical - Secrets Management
+  # ===========================================
+  infisical:
+    image: infisical/infisical:latest
+    environment:
+      DB_CONNECTION_URI: postgresql://${INFISICAL_DB_USER:-infisical}:${INFISICAL_DB_PASSWORD}@${POSTGRES_HOST}:5432/${INFISICAL_DB_NAME:-infisical}
+      REDIS_URL: redis://redis:6379
+      SITE_URL: https://secrets.${DOMAIN:-localhost}
+      ENCRYPTION_KEY: ${INFISICAL_ENCRYPTION_KEY}
+      AUTH_SECRET: ${INFISICAL_AUTH_SECRET}
+    volumes:
+      - infisical-data:/app/data
+    networks:
+      - traefik-public
+      - backend
+      - database
+    depends_on:
+      - redis
+    deploy:
+      replicas: 2
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.infisical.rule=Host(`secrets.${DOMAIN:-localhost}`)"
+        - "traefik.http.routers.infisical.entrypoints=websecure"
+        - "traefik.http.routers.infisical.tls.certresolver=letsencrypt"
+        - "traefik.http.routers.infisical.middlewares=auth-authentik@docker"
+        - "traefik.http.services.infisical.loadbalancer.server.port=8080"
+
+  # ===========================================
+  # JumpServer - Session Recording and Audit
+  # ===========================================
+  jumpserver:
+    image: jumpserver/jms_all:v3.10.3
+    environment:
+      SECRET_KEY: ${JUMPSERVER_SECRET_KEY}
+      BOOTSTRAP_TOKEN: ${JUMPSERVER_BOOTSTRAP_TOKEN}
+      DB_ENGINE: postgresql
+      DB_HOST: ${POSTGRES_HOST}
+      DB_PORT: 5432
+      DB_USER: ${JUMPSERVER_DB_USER:-jumpserver}
+      DB_PASSWORD: ${JUMPSERVER_DB_PASSWORD}
+      DB_NAME: ${JUMPSERVER_DB_NAME:-jumpserver}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      LOG_LEVEL: INFO
+      SESSION_COOKIE_AGE: 86400
+      SESSION_EXPIRE_AT_BROWSER_CLOSE: "true"
+      HTTP_BIND_HOST: "0.0.0.0"
+      HTTP_LISTEN_PORT: 8080
+      # OIDC Configuration for Authentik
+      AUTH_OPENID: "true"
+      BASE_SITE_URL: https://jump.${DOMAIN:-localhost}
+      AUTH_OPENID_CLIENT_ID: ${JUMPSERVER_OIDC_CLIENT_ID}
+      AUTH_OPENID_CLIENT_SECRET: ${JUMPSERVER_OIDC_CLIENT_SECRET}
+      AUTH_OPENID_PROVIDER_ENDPOINT: https://auth.${DOMAIN:-localhost}/application/o/jumpserver/
+      AUTH_OPENID_PROVIDER_AUTHORIZATION_ENDPOINT: https://auth.${DOMAIN:-localhost}/application/o/authorize/
+      AUTH_OPENID_PROVIDER_TOKEN_ENDPOINT: https://auth.${DOMAIN:-localhost}/application/o/token/
+    volumes:
+      - jumpserver-data:/opt/jumpserver/data
+      - jumpserver-logs:/opt/jumpserver/logs
+    networks:
+      - traefik-public
+      - backend
+      - database
+    depends_on:
+      - redis
+    deploy:
+      replicas: 2
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.jumpserver.rule=Host(`jump.${DOMAIN:-localhost}`)"
+        - "traefik.http.routers.jumpserver.entrypoints=websecure"
+        - "traefik.http.routers.jumpserver.tls.certresolver=letsencrypt"
+        - "traefik.http.routers.jumpserver.middlewares=auth-authentik@docker"
+        - "traefik.http.services.jumpserver.loadbalancer.server.port=8080"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/health/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ===========================================
+  # 1Panel - Server Administration
+  # ===========================================
+  onepanel:
+    image: moelin/1panel:latest
+    environment:
+      DB_TYPE: postgresql
+      DB_HOST: ${POSTGRES_HOST}
+      DB_PORT: 5432
+      DB_USER: ${ONEPANEL_DB_USER:-onepanel}
+      DB_PASSWORD: ${ONEPANEL_DB_PASSWORD}
+      DB_NAME: ${ONEPANEL_DB_NAME:-onepanel}
+    volumes:
+      - onepanel-data:/opt/1panel
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - traefik-public
+      - backend
+      - database
+    deploy:
+      mode: global
+      placement:
+        constraints:
+          - node.role == manager
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.onepanel.rule=Host(`panel.${DOMAIN:-localhost}`)"
+        - "traefik.http.routers.onepanel.entrypoints=websecure"
+        - "traefik.http.routers.onepanel.tls.certresolver=letsencrypt"
+        - "traefik.http.routers.onepanel.middlewares=auth-authentik@docker"
+        - "traefik.http.services.onepanel.loadbalancer.server.port=8080"
+
+  # ===========================================
+  # WebAsset Controller - Banking Automation
+  # ===========================================
+  webasset-controller:
+    image: ${WEBASSET_IMAGE:-ghcr.io/infra-neo/webasset-controller:latest}
+    environment:
+      NODE_ENV: production
+      # Database
+      DATABASE_URL: postgresql://${WEBASSET_DB_USER:-webasset}:${WEBASSET_DB_PASSWORD}@${POSTGRES_HOST}:5432/${WEBASSET_DB_NAME:-webasset}
+      # OIDC Configuration for Authentik
+      OIDC_ISSUER: https://auth.${DOMAIN:-localhost}/application/o/webasset/
+      OIDC_CLIENT_ID: ${WEBASSET_OIDC_CLIENT_ID}
+      OIDC_CLIENT_SECRET: ${WEBASSET_OIDC_CLIENT_SECRET}
+      OIDC_REDIRECT_URI: https://webasset.${DOMAIN:-localhost}/auth/callback
+      # Infisical Integration
+      INFISICAL_URL: http://infisical:8080
+      INFISICAL_TOKEN: ${WEBASSET_INFISICAL_TOKEN}
+      # Banking Sites Configuration
+      BMG_CONSIG_URL: https://www.bmgconsig.com.br/Index.do?method=prepare
+      ICRED_API_URL: https://api.icred.app/authorization-server/custom-login
+      # Session Configuration
+      SESSION_TIMEOUT: 1800
+      KIOSK_MODE: "true"
+      # Audit Configuration
+      AUDIT_ENABLED: "true"
+      JUMPSERVER_API_URL: http://jumpserver:8080
+      JUMPSERVER_API_TOKEN: ${JUMPSERVER_API_TOKEN}
+    volumes:
+      - webasset-data:/app/data
+      - /dev/shm:/dev/shm  # Required for Playwright
+    networks:
+      - traefik-public
+      - backend
+      - database
+    cap_add:
+      - SYS_ADMIN  # Required for Chrome sandbox
+    deploy:
+      replicas: 3
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.webasset.rule=Host(`webasset.${DOMAIN:-localhost}`)"
+        - "traefik.http.routers.webasset.entrypoints=websecure"
+        - "traefik.http.routers.webasset.tls.certresolver=letsencrypt"
+        - "traefik.http.routers.webasset.middlewares=auth-authentik@docker"
+        - "traefik.http.services.webasset.loadbalancer.server.port=3000"
+        # Sticky sessions for WebAsset (important for browser sessions)
+        - "traefik.http.services.webasset.loadbalancer.sticky.cookie=true"
+        - "traefik.http.services.webasset.loadbalancer.sticky.cookie.name=webasset_session"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
