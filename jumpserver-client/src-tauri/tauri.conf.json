@@ -35,9 +35,9 @@
     "beforeDevCommand": "pnpm dev",
     "devUrl": "http://localhost:3000"
   },
-  "productName": "JumpServerClient",
+  "productName": "Neogenesys Cloud",
   "version": "3.1.0",
-  "identifier": "com.jumpserver.client",
+  "identifier": "com.neogenesys.cloud",
   "plugins": {
     "deep-link": {
       "desktop": {

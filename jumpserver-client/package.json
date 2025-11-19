@@ -1,11 +1,11 @@
 {
-  "name": "jumpserver-client",
+  "name": "neogenesys-cloud",
   "type": "module",
   "version": "1.4.0",
   "private": true,
   "packageManager": "pnpm@10.20.0",
-  "description": "JumpServer client tool",
-  "author": "JumpServer",
+  "description": "Neogenesys Cloud client tool",
+  "author": "Neogenesys",
   "license": "MIT",
   "engines": {
     "node": ">=20"
