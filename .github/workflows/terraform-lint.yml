@@ -1,0 +1,197 @@
+name: Terraform Lint and Validate
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+    paths:
+      - 'terraform/**'
+      - '.github/workflows/terraform-lint.yml'
+  pull_request:
+    branches:
+      - main
+      - develop
+    paths:
+      - 'terraform/**'
+  workflow_dispatch:
+
+env:
+  TF_VERSION: '1.6.0'
+
+jobs:
+  terraform-fmt:
+    name: Terraform Format Check
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    defaults:
+      run:
+        working-directory: ./terraform
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Terraform Format Check
+        run: terraform fmt -check -recursive -diff
+
+      - name: Auto-format on failure
+        if: failure()
+        run: |
+          terraform fmt -recursive
+          echo "::warning::Terraform files were not properly formatted. Auto-formatted files."
+
+  terraform-validate:
+    name: Terraform Validate
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    strategy:
+      matrix:
+        module:
+          - '.'
+          - 'modules/compute'
+          - 'modules/network'
+          - 'modules/firewall'
+          - 'modules/postgresql'
+    defaults:
+      run:
+        working-directory: ./terraform
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Terraform Init
+        run: terraform init -backend=false
+        working-directory: ./terraform/${{ matrix.module }}
+
+      - name: Terraform Validate
+        run: terraform validate
+        working-directory: ./terraform/${{ matrix.module }}
+
+  tflint:
+    name: TFLint
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    defaults:
+      run:
+        working-directory: ./terraform
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup TFLint
+        uses: terraform-linters/setup-tflint@v4
+        with:
+          tflint_version: latest
+
+      - name: Initialize TFLint
+        run: tflint --init
+
+      - name: Run TFLint
+        run: tflint --recursive --format=compact
+
+  tfsec:
+    name: TFSec Security Scan
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run tfsec
+        uses: aquasecurity/tfsec-action@v1.0.3
+        with:
+          working_directory: ./terraform
+          soft_fail: true
+
+      - name: Upload tfsec results
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: tfsec.sarif
+        continue-on-error: true
+
+  checkov:
+    name: Checkov Security Scan
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Checkov
+        uses: bridgecrewio/checkov-action@master
+        with:
+          directory: ./terraform
+          framework: terraform
+          output_format: sarif
+          soft_fail: true
+
+      - name: Upload Checkov results
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: results.sarif
+        continue-on-error: true
+
+  terraform-docs:
+    name: Generate Terraform Docs
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Generate Terraform docs
+        uses: terraform-docs/gh-actions@v1.0.0
+        with:
+          working-dir: ./terraform
+          output-file: README.md
+          output-method: inject
+          git-push: true
+          git-commit-message: "docs: update Terraform documentation"
+
+  summary:
+    name: Lint Summary
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    needs: [terraform-fmt, terraform-validate, tflint, tfsec, checkov]
+    if: always()
+    
+    steps:
+      - name: Check results
+        run: |
+          echo "### Terraform Lint Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- Format Check: ${{ needs.terraform-fmt.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Validation: ${{ needs.terraform-validate.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- TFLint: ${{ needs.tflint.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- TFSec: ${{ needs.tfsec.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Checkov: ${{ needs.checkov.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Author:** Ing. Benjamín Frías — DevOps & Cloud Specialist" >> $GITHUB_STEP_SUMMARY
