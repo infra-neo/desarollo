@@ -39,19 +39,44 @@ Two branches have been created to work with Jumpserver components:
 - User interface for system access
 - Remote access tools
 
+## Branch Status
+
+Both branches have been created locally:
+- ✓ `jumpserver-installer` - Created locally
+- ✓ `jumpserver-client` - Created locally
+
+### Pushing Branches to Remote
+
+To push these branches to the remote repository, use the provided script:
+
+```bash
+# Push both jumpserver branches to remote
+./push-jumpserver-branches.sh
+```
+
+Alternatively, push manually:
+
+```bash
+git push origin jumpserver-installer:jumpserver-installer
+git push origin jumpserver-client:jumpserver-client
+```
+
 ## Usage
 
 To work with these branches:
 
 ```bash
+# List all jumpserver branches
+git branch | grep jumpserver
+
 # Switch to the installer branch
 git checkout jumpserver-installer
 
 # Switch to the client branch
 git checkout jumpserver-client
 
-# List all jumpserver branches
-git branch | grep jumpserver
+# Verify remote branches exist
+git branch -a | grep jumpserver
 ```
 
 ## Integration Plan
