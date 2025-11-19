@@ -1,0 +1,275 @@
+# build.yml
+
+name: Build and Release Client
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version number (e.g., v1.0.0)"
+        required: true
+        type: string
+      build_debug:
+        description: "Build debug version"
+        required: false
+        default: true
+        type: boolean
+  push:
+    branches:
+      - master
+    tags:
+      - "v*" # 只有正式版本标签才触发构建
+
+env:
+  VERSION: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.version || github.ref_name }}
+
+permissions:
+  contents: write
+
+jobs:
+  pre-build:
+    name: pre-build go client
+    runs-on: ubuntu-latest
+    outputs:
+      go-client-artifacts: ${{ steps.upload-go-client.outputs.artifact-name }}
+
+    steps:
+      - name: Check out git repository
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: "1.21"
+
+      - name: Build Go client for all platforms
+        run: make build-all
+        working-directory: go-client
+
+      - name: Upload Go client artifacts
+        id: upload-go-client
+        uses: actions/upload-artifact@v4
+        with:
+          name: go-client-binaries
+          path: go-client/build/
+          retention-days: 1
+
+  create-release-draft:
+    name: create latest.json
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
+    outputs:
+      release-draft-created: ${{ steps.create-release-draft.outputs.release-draft-created }}
+
+    steps:
+      - name: Check out git repository
+        uses: actions/checkout@v4
+
+      - name: Generate latest.json
+        shell: bash
+        run: |
+          echo '{
+            "version": "${{ env.VERSION }}",
+            "notes": "Release ${{ env.VERSION }}",
+            "pub_date": "'$(date -u +%Y-%m-%dT%H:%M:%SZ)'",
+            "platforms": {
+              "darwin-x86_64": {
+                "signature": "",
+                "url": "https://github.com/jumpserver/clients/releases/download/${{ env.VERSION }}/JumpServerClient_${{ env.VERSION }}_x86_64.dmg"
+              },
+              "darwin-aarch64": {
+                "signature": "",
+                "url": "https://github.com/jumpserver/clients/releases/download/${{ env.VERSION }}/JumpServerClient_${{ env.VERSION }}_aarch64.dmg"
+              },
+              "windows-x86_64": {
+                "signature": "",
+                "url": "https://github.com/jumpserver/clients/releases/download/${{ env.VERSION }}/JumpServerClient_${{ env.VERSION }}_x64.exe"
+              },
+              "windows-x86_64-msi": {
+                "signature": "",
+                "url": "https://github.com/jumpserver/clients/releases/download/${{ env.VERSION }}/JumpServerClient_${{ env.VERSION }}_x64.msi"
+              }
+            }
+          }' > latest.json
+
+      - name: Upload latest.json to release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ env.VERSION }}
+          files: latest.json
+          fail_on_unmatched_files: true
+          draft: true
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build:
+    name: build tauri app
+    needs: pre-build
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: "macos-latest" # for Arm based macs (M1 and above).
+            args: "--target aarch64-apple-darwin"
+          - platform: "macos-latest" # for Intel based macs.
+            args: "--target x86_64-apple-darwin"
+          - platform: "ubuntu-22.04" # for Tauri v1 you could replace this with ubuntu-20.04.
+            args: ""
+          - platform: "windows-latest"
+            args: ""
+
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - name: Check out git repository
+        uses: actions/checkout@v4
+
+      - name: Download Go client artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: go-client-binaries
+          path: go-client/build/
+
+      - name: Import Apple Developer Certificate
+        if: matrix.platform == 'macos-latest'
+        env:
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+        run: |
+          # Mask sensitive values in logs
+          echo "::add-mask::$KEYCHAIN_PASSWORD"
+          echo "::add-mask::$APPLE_CERTIFICATE_PASSWORD"
+          
+          # Decode certificate without echoing it
+          echo "$APPLE_CERTIFICATE" | base64 --decode > certificate.p12
+          security create-keychain -p "$KEYCHAIN_PASSWORD" build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" build.keychain
+          security set-keychain-settings -t 3600 -u build.keychain
+          security import certificate.p12 -k build.keychain -P "$APPLE_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" build.keychain
+          
+          # Clean up certificate file
+          rm -f certificate.p12
+          
+          # List identities (only show count, not full details)
+          IDENTITY_COUNT=$(security find-identity -v -p codesigning build.keychain | grep -c "valid identities found" || echo "0")
+          echo "Found $IDENTITY_COUNT valid code signing identity/identities"
+
+      - name: Verify Certificate
+        if: matrix.platform == 'macos-latest'
+        run: |
+          # Try to find valid code signing certificate (Developer ID, Apple Distribution, or Apple Development)
+          # Priority: Developer ID Application > Apple Distribution > Apple Development
+          CERT_INFO=$(security find-identity -v -p codesigning build.keychain 2>/dev/null | grep -E "Developer ID Application|Apple Distribution|Apple Development" | head -n 1)
+          
+          if [ -z "$CERT_INFO" ]; then
+            echo "Error: No valid Apple certificate found in keychain"
+            # Only show certificate count, not full details
+            CERT_COUNT=$(security find-identity -v -p codesigning build.keychain 2>/dev/null | grep -c "valid identities found" || echo "0")
+            echo "Found $CERT_COUNT certificate(s) in keychain"
+            exit 1
+          fi
+          
+          CERT_ID=$(echo "$CERT_INFO" | awk '{print $2}')
+          
+          if [ -z "$CERT_ID" ]; then
+            echo "Error: Failed to extract certificate ID"
+            exit 1
+          fi
+          
+          # Extract certificate name (content between quotes)
+          # Format: 1) CERT_ID "Certificate Name"
+          CERT_NAME=$(echo "$CERT_INFO" | sed -n 's/.*"\(.*\)".*/\1/p')
+          
+          if [ -z "$CERT_NAME" ]; then
+            echo "Error: Failed to extract certificate name"
+            exit 1
+          fi
+          
+          # Mask certificate ID and name in logs
+          echo "::add-mask::$CERT_ID"
+          echo "::add-mask::$CERT_NAME"
+          
+          # Extract Team ID from certificate name (format: "Developer ID Application: Name (TEAM_ID)")
+          # Use sed to extract content between parentheses
+          TEAM_ID=$(echo "$CERT_NAME" | sed -n 's/.*(\([A-Z0-9]*\)).*/\1/p' | head -n 1)
+          
+          if [ -z "$TEAM_ID" ]; then
+            echo "Warning: Failed to extract Team ID from certificate name, trying alternative method"
+            # Alternative: try to get from certificate directly using openssl (without outputting full subject)
+            CERT_SUBJECT=$(security find-certificate -c "$CERT_ID" -p build.keychain 2>/dev/null | openssl x509 -noout -subject 2>/dev/null || echo "")
+            if [ -n "$CERT_SUBJECT" ]; then
+              TEAM_ID=$(echo "$CERT_SUBJECT" | sed -n 's/.*OU=\([^/]*\).*/\1/p' | head -n 1)
+            fi
+          fi
+          
+          # Mask Team ID in logs
+          if [ -n "$TEAM_ID" ]; then
+            echo "::add-mask::$TEAM_ID"
+          fi
+          
+          # Set environment variables
+          # Use certificate name (not ID) for APPLE_SIGNING_IDENTITY as required by tauri-action
+          echo "APPLE_SIGNING_IDENTITY=$CERT_NAME" >> $GITHUB_ENV
+          if [ -n "$TEAM_ID" ]; then
+            echo "APPLE_TEAM_ID=$TEAM_ID" >> $GITHUB_ENV
+          fi
+          
+          # Show sanitized info (only certificate type, not full details)
+          CERT_TYPE=$(echo "$CERT_INFO" | sed -n 's/.*"\(Developer ID Application\|Apple Distribution\|Apple Development\).*/\1/p')
+          echo "✓ Certificate verified: $CERT_TYPE"
+          echo "✓ Certificate imported and verified successfully."
+
+      - name: Install Go client for current platform
+        run: make install
+        working-directory: go-client
+
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm
+        with:
+          run_install: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "23"
+          cache: "pnpm"
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          # Those targets are only used on macos runners so it's in an `if` to slightly speed up windows and linux builds.
+          targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+
+      - name: Install system dependencies (Ubuntu)
+        if: matrix.platform == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libssl-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev patchelf
+
+      - name: Install frontend dependencies
+        run: pnpm install
+
+      - name: Build Tauri app
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
+          TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ env.APPLE_SIGNING_IDENTITY }}
+          APPLE_TEAM_ID: ${{ env.APPLE_TEAM_ID }}
+
+        with:
+          tagName: ${{ env.VERSION }}
+          releaseName: "JumpServer Client v__VERSION__"
+          releaseBody: "See the assets to download this version and install."
+          releaseDraft: true
+          prerelease: false
+          includeDebug: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.build_debug || false }}
+          includeRelease: ${{ github.event_name == 'workflow_dispatch' && !github.event.inputs.build_debug || github.event_name == 'push' }}
