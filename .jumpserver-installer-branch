@@ -1,0 +1,9 @@
+# Jumpserver Installer Branch
+
+This branch is dedicated to integrating the Jumpserver installer component from https://github.com/jumpserver/installer
+
+## Purpose
+To integrate and manage the Jumpserver installer deployment tools within the desarollo infrastructure.
+
+## Status
+Branch initialized and ready for integration work.
