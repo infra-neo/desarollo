@@ -1,0 +1,63 @@
+# Environment files
+.env
+.env.local
+.env.production
+
+# Terraform
+terraform-gcp/.terraform/
+terraform-gcp/*.tfstate
+terraform-gcp/*.tfstate.backup
+terraform-gcp/.terraform.lock.hcl
+terraform-gcp/terraform.tfvars
+
+# Docker volumes (if mounted locally)
+postgresql_data/
+authentik_media/
+authentik_templates/
+authentik_certs/
+jumpserver_data/
+jumpserver_logs/
+jumpserver_sessions/
+infisical_data/
+traefik_certs/
+tailscale_data/
+panel_data/
+
+# Logs
+*.log
+logs/
+
+# Backups
+backups/
+*.sql
+*.tar.gz
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Node modules (if developing WebAsset Controller locally)
+webasset-controller/node_modules/
+webasset-controller/recordings/
+webasset-controller/package-lock.json
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+
+# Temporary files
+tmp/
+temp/
+*.tmp

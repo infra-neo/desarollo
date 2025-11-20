@@ -1,0 +1,384 @@
+version: '3.8'
+
+networks:
+  mcp-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+volumes:
+  postgresql_data:
+  authentik_media:
+  authentik_templates:
+  authentik_certs:
+  jumpserver_data:
+  jumpserver_logs:
+  jumpserver_sessions:
+  infisical_data:
+  traefik_certs:
+  tailscale_data:
+  panel_data:
+
+services:
+  # PostgreSQL - Single database instance with multiple databases
+  postgresql:
+    image: postgres:15-alpine
+    container_name: mcp-postgresql
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+    volumes:
+      - postgresql_data:/var/lib/postgresql/data
+      - ../postgresql/init-databases.sql:/docker-entrypoint-initdb.d/init-databases.sql:ro
+    networks:
+      mcp-network:
+        ipv4_address: 172.20.0.10
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis - Shared cache for Authentik and other services
+  redis:
+    image: redis:7-alpine
+    container_name: mcp-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    networks:
+      mcp-network:
+        ipv4_address: 172.20.0.11
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # Authentik Server
+  authentik-server:
+    image: ghcr.io/goauthentik/server:latest
+    container_name: mcp-authentik-server
+    restart: unless-stopped
+    command: server
+    environment:
+      AUTHENTIK_SECRET_KEY: ${AUTHENTIK_SECRET_KEY:-changeme-secret-key-min-50-chars-long-please-change-this}
+      AUTHENTIK_POSTGRESQL__HOST: postgresql
+      AUTHENTIK_POSTGRESQL__NAME: authentik
+      AUTHENTIK_POSTGRESQL__USER: authentik
+      AUTHENTIK_POSTGRESQL__PASSWORD: ${AUTHENTIK_DB_PASSWORD:-authentik_password}
+      AUTHENTIK_REDIS__HOST: redis
+      AUTHENTIK_ERROR_REPORTING__ENABLED: "false"
+      AUTHENTIK_LOG_LEVEL: ${AUTHENTIK_LOG_LEVEL:-info}
+      # OIDC Configuration
+      AUTHENTIK_AUTHENTIK__AVATARS: initials
+    volumes:
+      - authentik_media:/media
+      - authentik_templates:/templates
+      - authentik_certs:/certs
+    networks:
+      - mcp-network
+    depends_on:
+      postgresql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.authentik.rule=Host(`auth.${DOMAIN:-localhost}`)"
+      - "traefik.http.routers.authentik.entrypoints=websecure"
+      - "traefik.http.routers.authentik.tls=true"
+      - "traefik.http.services.authentik.loadbalancer.server.port=9000"
+
+  # Authentik Worker
+  authentik-worker:
+    image: ghcr.io/goauthentik/server:latest
+    container_name: mcp-authentik-worker
+    restart: unless-stopped
+    command: worker
+    environment:
+      AUTHENTIK_SECRET_KEY: ${AUTHENTIK_SECRET_KEY:-changeme-secret-key-min-50-chars-long-please-change-this}
+      AUTHENTIK_POSTGRESQL__HOST: postgresql
+      AUTHENTIK_POSTGRESQL__NAME: authentik
+      AUTHENTIK_POSTGRESQL__USER: authentik
+      AUTHENTIK_POSTGRESQL__PASSWORD: ${AUTHENTIK_DB_PASSWORD:-authentik_password}
+      AUTHENTIK_REDIS__HOST: redis
+      AUTHENTIK_ERROR_REPORTING__ENABLED: "false"
+      AUTHENTIK_LOG_LEVEL: ${AUTHENTIK_LOG_LEVEL:-info}
+    volumes:
+      - authentik_media:/media
+      - authentik_templates:/templates
+      - authentik_certs:/certs
+    networks:
+      - mcp-network
+    depends_on:
+      postgresql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # Traefik Reverse Proxy
+  traefik:
+    image: traefik:v2.11
+    container_name: mcp-traefik
+    restart: unless-stopped
+    command:
+      - "--api.dashboard=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--providers.file.directory=/etc/traefik/dynamic"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
+      - "--certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL:-admin@example.com}"
+      - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
+      - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web"
+      - "--log.level=${TRAEFIK_LOG_LEVEL:-INFO}"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - traefik_certs:/letsencrypt
+      - ../traefik/dynamic:/etc/traefik/dynamic:ro
+    networks:
+      mcp-network:
+        ipv4_address: 172.20.0.5
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.traefik.rule=Host(`traefik.${DOMAIN:-localhost}`)"
+      - "traefik.http.routers.traefik.entrypoints=websecure"
+      - "traefik.http.routers.traefik.tls=true"
+      - "traefik.http.routers.traefik.service=api@internal"
+      - "traefik.http.routers.traefik.middlewares=authentik@file"
+
+  # Tailscale
+  tailscale:
+    image: tailscale/tailscale:latest
+    container_name: mcp-tailscale
+    restart: unless-stopped
+    hostname: ${TAILSCALE_HOSTNAME:-mcp-server}
+    environment:
+      TS_AUTHKEY: ${TS_AUTHKEY}
+      TS_STATE_DIR: /var/lib/tailscale
+      TS_EXTRA_ARGS: ${TS_EXTRA_ARGS:---advertise-tags=tag:mcp}
+    volumes:
+      - tailscale_data:/var/lib/tailscale
+      - /dev/net/tun:/dev/net/tun
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    networks:
+      - mcp-network
+
+  # JumpServer Core
+  jumpserver-core:
+    image: jumpserver/core:v3.10.0
+    container_name: mcp-jumpserver-core
+    restart: unless-stopped
+    environment:
+      SECRET_KEY: ${JUMPSERVER_SECRET_KEY:-changeme-jumpserver-secret-key}
+      BOOTSTRAP_TOKEN: ${JUMPSERVER_BOOTSTRAP_TOKEN:-changeme-bootstrap-token}
+      LOG_LEVEL: ${JUMPSERVER_LOG_LEVEL:-INFO}
+      DB_ENGINE: postgresql
+      DB_HOST: postgresql
+      DB_PORT: 5432
+      DB_USER: jumpserver
+      DB_PASSWORD: ${JUMPSERVER_DB_PASSWORD:-jumpserver_password}
+      DB_NAME: jumpserver
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ""
+      # OIDC Configuration for Authentik
+      AUTH_OPENID: "true"
+      BASE_SITE_URL: https://jump.${DOMAIN:-localhost}
+      AUTH_OPENID_CLIENT_ID: ${JUMPSERVER_OIDC_CLIENT_ID}
+      AUTH_OPENID_CLIENT_SECRET: ${JUMPSERVER_OIDC_CLIENT_SECRET}
+      AUTH_OPENID_PROVIDER_ENDPOINT: https://auth.${DOMAIN:-localhost}/application/o/jumpserver/
+      AUTH_OPENID_PROVIDER_AUTHORIZATION_ENDPOINT: https://auth.${DOMAIN:-localhost}/application/o/authorize/
+      AUTH_OPENID_PROVIDER_TOKEN_ENDPOINT: https://auth.${DOMAIN:-localhost}/application/o/token/
+      AUTH_OPENID_PROVIDER_JWKS_ENDPOINT: https://auth.${DOMAIN:-localhost}/application/o/jumpserver/jwks/
+      AUTH_OPENID_PROVIDER_USERINFO_ENDPOINT: https://auth.${DOMAIN:-localhost}/application/o/userinfo/
+      AUTH_OPENID_PROVIDER_END_SESSION_ENDPOINT: https://auth.${DOMAIN:-localhost}/application/o/jumpserver/end-session/
+      # Session Recording
+      SESSION_EXPIRE_AT_BROWSER_CLOSE: "true"
+      SESSION_COOKIE_AGE: 86400
+      # Enable Web Terminal and Session Recording
+      WINDOWS_SKIP_ALL_MANUAL_PASSWORD: "false"
+    volumes:
+      - jumpserver_data:/opt/jumpserver/data
+      - jumpserver_logs:/opt/jumpserver/logs
+      - jumpserver_sessions:/opt/jumpserver/data/media/replay
+    networks:
+      - mcp-network
+    depends_on:
+      postgresql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.jumpserver.rule=Host(`jump.${DOMAIN:-localhost}`)"
+      - "traefik.http.routers.jumpserver.entrypoints=websecure"
+      - "traefik.http.routers.jumpserver.tls=true"
+      - "traefik.http.services.jumpserver.loadbalancer.server.port=8080"
+
+  # JumpServer KoKo (SSH/Web Terminal)
+  jumpserver-koko:
+    image: jumpserver/koko:v3.10.0
+    container_name: mcp-jumpserver-koko
+    restart: unless-stopped
+    environment:
+      CORE_HOST: http://jumpserver-core:8080
+      BOOTSTRAP_TOKEN: ${JUMPSERVER_BOOTSTRAP_TOKEN:-changeme-bootstrap-token}
+      LOG_LEVEL: ${JUMPSERVER_LOG_LEVEL:-INFO}
+    networks:
+      - mcp-network
+    depends_on:
+      - jumpserver-core
+
+  # JumpServer Lion (Web Terminal for RDP/VNC)
+  jumpserver-lion:
+    image: jumpserver/lion:v3.10.0
+    container_name: mcp-jumpserver-lion
+    restart: unless-stopped
+    environment:
+      CORE_HOST: http://jumpserver-core:8080
+      BOOTSTRAP_TOKEN: ${JUMPSERVER_BOOTSTRAP_TOKEN:-changeme-bootstrap-token}
+      LOG_LEVEL: ${JUMPSERVER_LOG_LEVEL:-INFO}
+    networks:
+      - mcp-network
+    depends_on:
+      - jumpserver-core
+
+  # JumpServer Magnus (Database Proxy)
+  jumpserver-magnus:
+    image: jumpserver/magnus:v3.10.0
+    container_name: mcp-jumpserver-magnus
+    restart: unless-stopped
+    environment:
+      CORE_HOST: http://jumpserver-core:8080
+      BOOTSTRAP_TOKEN: ${JUMPSERVER_BOOTSTRAP_TOKEN:-changeme-bootstrap-token}
+      LOG_LEVEL: ${JUMPSERVER_LOG_LEVEL:-INFO}
+    networks:
+      - mcp-network
+    depends_on:
+      - jumpserver-core
+
+  # JumpServer Chen (Web Proxy for HTTP/HTTPS)
+  jumpserver-chen:
+    image: jumpserver/chen:v3.10.0
+    container_name: mcp-jumpserver-chen
+    restart: unless-stopped
+    environment:
+      CORE_HOST: http://jumpserver-core:8080
+      BOOTSTRAP_TOKEN: ${JUMPSERVER_BOOTSTRAP_TOKEN:-changeme-bootstrap-token}
+      LOG_LEVEL: ${JUMPSERVER_LOG_LEVEL:-INFO}
+      # Enable session recording for web assets
+      ENABLE_SESSION_RECORDING: "true"
+    networks:
+      - mcp-network
+    depends_on:
+      - jumpserver-core
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.jumpserver-chen.rule=Host(`jump.${DOMAIN:-localhost}`) && PathPrefix(`/chen`)"
+      - "traefik.http.routers.jumpserver-chen.entrypoints=websecure"
+      - "traefik.http.routers.jumpserver-chen.tls=true"
+      - "traefik.http.services.jumpserver-chen.loadbalancer.server.port=8082"
+
+  # Infisical - Secrets Management
+  infisical:
+    image: infisical/infisical:latest
+    container_name: mcp-infisical
+    restart: unless-stopped
+    environment:
+      ENCRYPTION_KEY: ${INFISICAL_ENCRYPTION_KEY:-changeme-encryption-key-32-chars}
+      JWT_SECRET: ${INFISICAL_JWT_SECRET:-changeme-jwt-secret}
+      DB_CONNECTION_URI: postgresql://infisical:${INFISICAL_DB_PASSWORD:-infisical_password}@postgresql:5432/infisical
+      REDIS_URL: redis://redis:6379
+      SITE_URL: https://vault.${DOMAIN:-localhost}
+      # OIDC Configuration for Authentik
+      AUTH_OIDC_ISSUER_URL: https://auth.${DOMAIN:-localhost}/application/o/infisical/
+      AUTH_OIDC_CLIENT_ID: ${INFISICAL_OIDC_CLIENT_ID}
+      AUTH_OIDC_CLIENT_SECRET: ${INFISICAL_OIDC_CLIENT_SECRET}
+    volumes:
+      - infisical_data:/app/data
+    networks:
+      - mcp-network
+    depends_on:
+      postgresql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.infisical.rule=Host(`vault.${DOMAIN:-localhost}`)"
+      - "traefik.http.routers.infisical.entrypoints=websecure"
+      - "traefik.http.routers.infisical.tls=true"
+      - "traefik.http.services.infisical.loadbalancer.server.port=8080"
+
+  # WebAsset Controller - Custom Credential Injection Service
+  webasset-controller:
+    build:
+      context: ../webasset-controller
+      dockerfile: Dockerfile
+    container_name: mcp-webasset-controller
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      # OIDC Configuration for Authentik
+      OIDC_ISSUER: https://auth.${DOMAIN:-localhost}/application/o/webasset/
+      OIDC_CLIENT_ID: ${WEBASSET_OIDC_CLIENT_ID}
+      OIDC_CLIENT_SECRET: ${WEBASSET_OIDC_CLIENT_SECRET}
+      OIDC_REDIRECT_URI: https://web.${DOMAIN:-localhost}/auth/callback
+      # Infisical Integration
+      INFISICAL_URL: http://infisical:8080
+      INFISICAL_TOKEN: ${INFISICAL_SERVICE_TOKEN}
+      # JumpServer Integration for session recording
+      JUMPSERVER_URL: http://jumpserver-core:8080
+      JUMPSERVER_API_KEY: ${JUMPSERVER_API_KEY}
+      # Browser Configuration
+      BROWSER_HEADLESS: "false"
+      BROWSER_KIOSK_MODE: "true"
+    networks:
+      - mcp-network
+    depends_on:
+      - authentik-server
+      - infisical
+      - jumpserver-core
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.webasset.rule=Host(`web.${DOMAIN:-localhost}`)"
+      - "traefik.http.routers.webasset.entrypoints=websecure"
+      - "traefik.http.routers.webasset.tls=true"
+      - "traefik.http.services.webasset.loadbalancer.server.port=3000"
+
+  # 1Panel - Admin Panel
+  1panel:
+    image: 1panel/1panel:latest
+    container_name: mcp-1panel
+    restart: unless-stopped
+    privileged: true
+    environment:
+      # OIDC Configuration for Authentik
+      OIDC_ENABLED: "true"
+      OIDC_ISSUER: https://auth.${DOMAIN:-localhost}/application/o/1panel/
+      OIDC_CLIENT_ID: ${PANEL_OIDC_CLIENT_ID}
+      OIDC_CLIENT_SECRET: ${PANEL_OIDC_CLIENT_SECRET}
+    volumes:
+      - panel_data:/opt/1panel
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - mcp-network
+    depends_on:
+      - authentik-server
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.panel.rule=Host(`panel.${DOMAIN:-localhost}`)"
+      - "traefik.http.routers.panel.entrypoints=websecure"
+      - "traefik.http.routers.panel.tls=true"
+      - "traefik.http.services.panel.loadbalancer.server.port=8080"
