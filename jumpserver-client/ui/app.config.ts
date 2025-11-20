@@ -1,9 +1,9 @@
 export default defineAppConfig({
   app: {
-    name: "JumpServer Client",
-    author: "JumpServer",
+    name: "Neogenesys Cloud",
+    author: "Neogenesys",
     version: "3.1.0",
-    repo: "https://github.com/jumpserver/clients"
+    repo: "https://github.com/infra-neo/desarollo"
   },
   componentsConfig: {
     header: {

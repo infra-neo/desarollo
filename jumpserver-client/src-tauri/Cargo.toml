@@ -1,14 +1,14 @@
 [package]
-name = "JumpServerClient"
+name = "NeogenesysCloud"
 version = "3.1.0"
-description = "JumpServer client tool"
-authors = [ "JumpServer" ]
+description = "Neogenesys Cloud client tool"
+authors = [ "Neogenesys" ]
 license = "MIT"
-repository = "https://github.com/jumpserver/clients"
+repository = "https://github.com/infra-neo/desarollo"
 edition = "2021"
 
 [lib]
-name = "jumpserver_client_lib"
+name = "neogenesys_cloud_lib"
 crate-type = [
   "staticlib",
   "cdylib",

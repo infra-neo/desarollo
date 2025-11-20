@@ -86,7 +86,7 @@ const debouncedSidebarSearch = useDebounceFn(emitSearch, 200);
       >
         <div class="flex items-center gap-2" v-if="!isMacOS && !collapse">
           <UAvatar size="sm" src="/logo.png" class="bg-transparent" :ui="{ root: 'bg-transparent' }" />
-          <span class="text-sm">JumpServer</span>
+          <span class="text-sm">Neogenesys</span>
         </div>
 
         <UButton
