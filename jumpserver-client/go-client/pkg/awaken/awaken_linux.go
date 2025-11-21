@@ -23,7 +23,7 @@ func awakenRDPCommand(filePath string, cfg *config.AppConfig) *exec.Cmd {
 	var appItem *config.AppItem
 	appLst := cfg.Linux.RemoteDesktop
 	for _, app := range appLst {
-		if app.IsMatchProtocol("rdp") {
+		if app.IsSet && app.IsMatchProtocol("rdp") {
 			appItem = &app
 			break
 		}
@@ -40,7 +40,7 @@ func awakenVNCCommand(r *Rouse, cfg *config.AppConfig) *exec.Cmd {
 	var appItem *config.AppItem
 	appLst := cfg.Linux.RemoteDesktop
 	for _, app := range appLst {
-		if app.IsMatchProtocol("vnc") {
+		if app.IsSet && app.IsMatchProtocol("vnc") {
 			appItem = &app
 			break
 		}
@@ -72,13 +72,14 @@ func awakenSSHCommand(r *Rouse, cfg *config.AppConfig) *exec.Cmd {
 	var appLst []config.AppItem
 	switch r.Protocol {
 	case "ssh", "telnet":
+		r.Protocol = "ssh"
 		appLst = cfg.Linux.Terminal
 	case "sftp":
 		appLst = cfg.Linux.FileTransfer
 	}
 
 	for _, app := range appLst {
-		if app.IsMatchProtocol(r.Protocol) {
+		if app.IsSet && app.IsMatchProtocol(r.Protocol) {
 			appItem = &app
 			break
 		}
@@ -86,17 +87,10 @@ func awakenSSHCommand(r *Rouse, cfg *config.AppConfig) *exec.Cmd {
 	if appItem == nil {
 		return nil
 	}
-
-	// telnet 协议使用 ssh 的配置参数格式
-	protocol := r.Protocol
-	if protocol == "telnet" {
-		protocol = "ssh"
-	}
-
 	var cmd *exec.Cmd
 	connectMap := map[string]string{
 		"name":     r.getName(),
-		"protocol": protocol,
+		"protocol": r.Protocol,
 		"username": r.getUserName(),
 		"value":    r.Value,
 		"host":     r.Host,
@@ -104,7 +98,7 @@ func awakenSSHCommand(r *Rouse, cfg *config.AppConfig) *exec.Cmd {
 	}
 
 	if appItem.IsInternal {
-		currentPath, _ := filepath.Abs(filepath.Dir(os.Args[0]))
+		currentPath := filepath.Dir(os.Args[0])
 		commands := getCommandFromArgs(connectMap, appItem.ArgFormat)
 		clientPath := filepath.Join(currentPath, "client")
 		out, err := exec.Command("bash", "-c", "echo $XDG_CURRENT_DESKTOP").CombinedOutput()
@@ -151,7 +145,7 @@ func awakenDBCommand(r *Rouse, cfg *config.AppConfig) *exec.Cmd {
 	var appItem *config.AppItem
 	appLst := cfg.Linux.Databases
 	for _, app := range appLst {
-		if app.IsMatchProtocol(r.Protocol) {
+		if app.IsSet && app.IsMatchProtocol(r.Protocol) {
 			appItem = &app
 			break
 		}

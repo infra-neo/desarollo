@@ -61,43 +61,15 @@ func getCommandFromArgs(connectInfo map[string]string, argFormat string) string 
 }
 
 func handleRDP(r *Rouse, filePath string, cfg *config.AppConfig) *exec.Cmd {
-	var appItem *config.AppItem
-	appLst := cfg.Windows.RemoteDesktop
-	for _, app := range appLst {
-		if app.IsMatchProtocol("rdp") {
-			appItem = &app
-			break
-		}
-	}
-	if appItem == nil {
-		return nil
-	}
-	appPath := appItem.Path
-	connectMap := map[string]string{
-		"file":     filePath,
-		"name":     r.getName(),
-		"protocol": r.Protocol,
-		"username": r.getUserName(),
-		"value":    r.Value,
-		"host":     r.Host,
-		"port":     strconv.Itoa(r.Port),
-	}
-	commands := strings.TrimSpace(getCommandFromArgs(connectMap, appItem.ArgFormat))
-
-	if strings.Contains(commands, "*") {
-		commands := strings.Split(commands, "*")
-		return exec.Command(appPath, commands...)
-	} else {
-		commands := strings.Split(commands, " ")
-		return exec.Command(appPath, commands...)
-	}
+	cmd := exec.Command("C:\\WINDOWS\\system32\\mstsc.exe", filePath)
+	return cmd
 }
 
 func handleVNC(r *Rouse, cfg *config.AppConfig) *exec.Cmd {
 	var appItem *config.AppItem
 	appLst := cfg.Windows.RemoteDesktop
 	for _, app := range appLst {
-		if app.IsMatchProtocol("vnc") {
+		if app.IsSet && app.IsMatchProtocol("vnc") {
 			appItem = &app
 			break
 		}
@@ -114,14 +86,7 @@ func handleVNC(r *Rouse, cfg *config.AppConfig) *exec.Cmd {
 		"port":     strconv.Itoa(r.Port),
 	}
 	if len(appItem.AutoIt) == 0 {
-		commands := getCommandFromArgs(connectMap, appItem.ArgFormat)
-		cmd := exec.Command(appItem.Path, strings.Split(commands, " ")...)
-		// 设置环境变量（只对这个子进程有效）
-		cmd.Env = append(os.Environ(),
-			"VNC_USERNAME="+r.getUserName(),
-			"VNC_PASSWORD="+r.Value,
-		)
-		return cmd
+		return nil
 	} else {
 		commands := getCommandFromArgs(connectMap, appItem.ArgFormat)
 		global.LOG.Error(appItem.Path + " " + commands)
@@ -188,13 +153,14 @@ func handleSSH(r *Rouse, cfg *config.AppConfig) *exec.Cmd {
 	var appLst []config.AppItem
 	switch r.Protocol {
 	case "ssh", "telnet":
+		r.Protocol = "ssh"
 		appLst = cfg.Windows.Terminal
 	case "sftp":
 		appLst = cfg.Windows.FileTransfer
 	}
 
 	for _, app := range appLst {
-		if app.IsMatchProtocol(r.Protocol) {
+		if app.IsSet && app.IsMatchProtocol(r.Protocol) {
 			appItem = &app
 			break
 		}
@@ -202,22 +168,17 @@ func handleSSH(r *Rouse, cfg *config.AppConfig) *exec.Cmd {
 	if appItem == nil {
 		return nil
 	}
-	// telnet 协议使用 ssh 的配置参数格式
-	protocol := r.Protocol
-	if protocol == "telnet" {
-		protocol = "ssh"
-	}
-
 	var appPath string
 	if appItem.IsInternal {
-		currentPath, _ := filepath.Abs(filepath.Dir(os.Args[0]))
+		currentPath := filepath.Dir(os.Args[0])
 		appPath = filepath.Join(currentPath, appItem.Path)
 	} else {
 		appPath = appItem.Path
 	}
+
 	connectMap := map[string]string{
 		"name":     r.getName(),
-		"protocol": protocol,
+		"protocol": r.Protocol,
 		"username": r.getUserName(),
 		"value":    r.Value,
 		"host":     r.Host,
@@ -237,7 +198,7 @@ func handleDB(r *Rouse, cfg *config.AppConfig) *exec.Cmd {
 	var appItem *config.AppItem
 	appLst := cfg.Windows.Databases
 	for _, app := range appLst {
-		if app.IsMatchProtocol(r.Protocol) {
+		if app.IsSet && app.IsMatchProtocol(r.Protocol) {
 			appItem = &app
 			break
 		}
