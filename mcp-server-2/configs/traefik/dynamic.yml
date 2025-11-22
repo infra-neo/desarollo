@@ -1,0 +1,69 @@
+# Traefik Dynamic Configuration
+
+http:
+  # Middlewares
+  middlewares:
+    # Security headers
+    security-headers:
+      headers:
+        frameDeny: true
+        browserXssFilter: true
+        contentTypeNosniff: true
+        forceSTSHeader: true
+        stsIncludeSubdomains: true
+        stsPreload: true
+        stsSeconds: 31536000
+        customFrameOptionsValue: "SAMEORIGIN"
+        customResponseHeaders:
+          X-Forwarded-Proto: "https"
+    
+    # Rate limiting
+    rate-limit:
+      rateLimit:
+        average: 100
+        burst: 50
+        period: 1m
+    
+    # Compression
+    compression:
+      compress: true
+    
+    # CORS (if needed)
+    cors:
+      headers:
+        accessControlAllowMethods:
+          - GET
+          - POST
+          - PUT
+          - DELETE
+          - OPTIONS
+        accessControlAllowOriginList:
+          - "*"
+        accessControlMaxAge: 100
+        addVaryHeader: true
+  
+  # Routers
+  routers:
+    # Redirect root to auth
+    root-redirect:
+      rule: "Host(`${DOMAIN}`) && Path(`/`)"
+      service: noop@internal
+      entryPoints:
+        - websecure
+      middlewares:
+        - security-headers
+      tls:
+        certResolver: letsencrypt
+
+  # Services
+  services:
+    # Dummy service for redirects
+    noop:
+      loadBalancer:
+        servers:
+          - url: "http://127.0.0.1"
+
+# TCP services (if needed)
+tcp:
+  routers: {}
+  services: {}
